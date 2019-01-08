@@ -14,10 +14,8 @@ int validateAddress(char string[]);
 int validatePort(char string[]);
 int validateBlockSize(char string[]);
 int validateNumOfBlocks(char string[]);
-int start_server_TCP();
-int start_server_UDP();
-int start_client_TCP();
-int start_client_UDP();
+int start_server_protocol(int tcp_or_udp);
+int start_client_protocol(int tcp_or_udp);
 SOCKET createSocket(void);
 clock_t stopWatch(void);
 double calculateElapsedTime(clock_t startTime, clock_t endTime);
@@ -83,8 +81,8 @@ int start_server()
 	// Spawn two threads. One for TCP, one for UDP
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
-	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_TCP, NULL, 0, NULL);
-	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_UDP, NULL, 0, NULL);
+	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_TCP, 0, NULL);
+	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
 
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
 
@@ -95,12 +93,12 @@ int start_server()
 
 #elif defined __linux__
 	pthread_t thread_linux_server[2];
-	if (pthread_create(&thread_linux_server[0], NULL, start_server_TCP, NULL) != 0)
+	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)IPPROTO_TCP) != 0)
 	{
 		// An error has occured
 		perror("Could not create Thread.");
 	}
-	else if (pthread_create(&thread_linux_server[1], NULL, start_server_UDP, NULL) != 0)
+	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)IPPROTO_UDP) != 0)
 	{
 		// An error has occured
 		perror("Could not create Thread.");
@@ -127,7 +125,7 @@ int start_server()
   server TCP
 ================
 */
-int start_server_TCP()
+int start_server_protocol(int tcp_or_udp)
 {
 	struct sockaddr_in socketAddress;		// address variables
 	struct sockaddr_in remoteAddress;		// address variables
@@ -140,7 +138,7 @@ int start_server_TCP()
     // create the local socket
 	//Protocol/Address family, type of socket (socket stream ie. tcpip/datagram stream ie. UDP), end to end protocol
 	//PF_INET, SOCK_DGRAM, IPPROTO_UDP
-    openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    openSocketHandle = socket(AF_INET, SOCK_STREAM, tcp_or_udp);
     if(INVALID_SOCKET == openSocketHandle) {
         perror("Could not create socket");
         return -1;
@@ -199,18 +197,12 @@ int start_server_TCP()
     return 0;
 }
 
-int start_server_UDP()
-{
-
-	return 0;
-}
-
 /*
 ================
   client function
 ================
 */
-int start_client_TCP()
+int start_client_protocol(int tcp_or_udp)
 {
     struct sockaddr_in socketAddress;	//local address variable
     SOCKET   openSocketHandle;			//Socket identifier
@@ -248,7 +240,7 @@ int start_client_TCP()
     }
 
     
-    openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    openSocketHandle = socket(AF_INET, SOCK_STREAM, tcp_or_udp);
 
 	SOCKET openSocketHandle = createSocket();
 	socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -289,11 +281,6 @@ int start_client_TCP()
 
     closesocket(openSocketHandle);
     return 0;
-}
-
-int start_client_UDP()
-{
-	return 0;
 }
 
 /*
@@ -459,10 +446,10 @@ int main(int argc, char* argv[])
         start_server();
         break;
     case 2:
-        start_client_TCP();
+        start_client_protocol(IPPROTO_TCP);
         break;
 	case 3:
-		start_client_UDP();
+		start_client_protocol(IPPROTO_UDP);
 		break;
     }
 
