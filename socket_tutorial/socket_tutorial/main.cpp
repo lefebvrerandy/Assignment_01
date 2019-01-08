@@ -196,7 +196,7 @@ int proc_arguments(int n, char* args[])
 	char numOfBlocks[3] = { "" };			//< Number of blocks to send
 	// 2d ARRAY ATTEMPT
 	char storedData[5][15];
-	char expectedArgument[5][15];
+	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
     // only two argument besides the actual command allowed
@@ -220,40 +220,61 @@ int proc_arguments(int n, char* args[])
 		./ispeed	-TCP/-UDP	-a ADDRESS	-p PORT		-s BLOCK_SIZE	-n NUM_BLOCKS
 		*/
 
-		// Iterate through the arguments starting at 
-		for (int i = 0; i < 9; i++)
-		{
-			i++;
-		}
-
-		// Type of Connection
+		// Check the Type of Connection
 		if (strcmp(args[1], "-TCP") == 0)
 			strcpy(tempArgument, args[1]);
 		else if (strcmp(args[1], "-UDP") == 0)
 			strcpy(tempArgument, args[1]);
 
-			// Check to see if tempArgument is empty, if so return an eror. If not, store into char array
+		// Check to see if tempArgument is empty, if so return an eror. If not, store into char array
 		if (strcmp((const char*)tempArgument[0], '\0') == 0) // THIS NEEDS TESTING
 			return -1;
 		else
 		{
-			strcpy(typeOfConnection, tempArgument);
-			tempArgument[0] = '\0';
+			strcpy(storedData[0], tempArgument);
 		}
 
+		// Iterate through the arguments starting at 2 and iterating by 2 each time through the loop
+		int j = 1;
+		for (int i = 2; i < 9; i++)
+		{
 
-		// Address
-		if (strcmp(args[2], "-a"))
-			strcpy(tempArgument, args[3]);
+			// If the expected is found, store the data into the 2d array called "StoredData" 
+			if (strcmp(args[i], expectedSwitch[j]) == 0)
+			{
+				strcpy(storedData[j], args[i + 1]);
 
-		// Port
-		strcpy(tempArgument, args[5]);
+				int res = 0;
+				switch (j)
+				{
+				case 0:
+					res = validateAddress(storedData[j]);
+					break;
+				case 1:
+					res = validatePort(storedData[j]);
+					break;
+				case 2:
+					res = validateBlockSize(storedData[j]);
+					break;
+				case 3:
+					res = validateNumOfBlocks(storedData[j]);
+					break;
+				}
 
-		// Block Size
-		strcpy(tempArgument, args[7]);
 
-		// Number of blocks
-		strcpy(tempArgument, args[9]);
+				if (res == 1)
+				{
+					return -3;
+				}
+			}
+			else
+			{
+				return -2;	// Return an error that a switch was misplaced or not found
+			}
+
+			i++; // Index for argument
+			j++; // Index for the 2d storedData array
+		}
 	}
 
 	// Not the correct amount of arguments.. Display the instructions (Might not be smart to display instructions
@@ -266,6 +287,42 @@ int proc_arguments(int n, char* args[])
     return 0;
 }
 
+int validateAddress(char string[])
+{
+	int res = 0;
+	// Check the address string to make sure its an address.
+	// If there is an error, return 1;
+
+
+	return res;
+}
+
+int validatePort(char string[])
+{
+	int res = 0;
+	// Check the port string to make sure its a port.
+	// If there is an error, return 1;
+
+	return res;
+}
+
+int validateBlockSize(char string[])
+{
+	int res = 0;
+	// Check the block size string to make sure its a valid size.
+	// If there is an error, return 1;
+
+	return res;
+}
+
+int validateNumOfBlocks(char string[])
+{
+	int res = 0;
+	// Check the number of blocks string to make sure its a valid size.
+	// If there is an error, return 1;
+
+	return res;
+}
 
 /*
 ================
