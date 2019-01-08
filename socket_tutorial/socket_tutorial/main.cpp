@@ -9,11 +9,22 @@
 */
 
 
-// Prototypes
+// Prototypes - For both OS
 int validateAddress(char string[]);
 int validatePort(char string[]);
 int validateBlockSize(char string[]);
 int validateNumOfBlocks(char string[]);
+int start_server_TCP();
+int start_server_UDP();
+int start_client_TCP();
+int start_client_UDP();
+
+//Prototypes OS specific
+#if defined _WIN32
+
+#elif defined __linux__
+
+#endif
 
 // Global struct for all client connection info
 char storedData[5][15];
@@ -28,12 +39,14 @@ char storedData[5][15];
 //OS Dependent Headers
 #if defined _WIN32
 #include <winsock.h>  // WinSock subsystem
+#include <windows.h>
 #elif defined __linux__
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #endif
 
 
@@ -56,9 +69,36 @@ typedef int SOCKET;
 int start_server()
 {
 	// Spawn two threads. One for TCP, one for UDP
+#if defined _WIN32
+	HANDLE thread_windows_server[2];
+	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_TCP, NULL, 0, NULL);
+	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_UDP, NULL, 0, NULL);
+
+#elif defined __linux__
+	pthread_t thread_linux_server[2];
+	if (pthread_create(&thread_linux_server[0], NULL, start_server_TCP, NULL) != 0)
+	{
+		// An error has occured
+		perror("Could not create Thread.");
+	}
+	else if (pthread_create(&thread_linux_server[1], NULL, start_server_UDP, NULL) != 0)
+	{
+		// An error has occured
+		perror("Could not create Thread.");
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (pthread_join(thread_linux_server[i], (void **)ptr_status) != 0)
+		{
+			perror("Cannot join Threads.");
+		}
+	}
+
+#endif
 
 	// TEMP - default to TCP
-	start_server_TCP();
+	//start_server_TCP();
 }
 
 /*
