@@ -55,7 +55,10 @@ typedef int SOCKET;
 */
 int start_server()
 {
+	// Spawn two threads. One for TCP, one for UDP
 
+	// TEMP - default to TCP
+	start_server_TCP();
 }
 
 /*
@@ -109,7 +112,7 @@ int start_server_TCP()
     fflush(stdout);
 
     // wait for a connection
-    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&r_addr, &len);
+    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressLength);
     if(INVALID_SOCKET == acceptedSocketConnection) {
         perror("Could not accept new connection");
         closesocket(openSocketHandle);
@@ -135,6 +138,11 @@ int start_server_TCP()
     return 0;
 }
 
+int start_server_UDP()
+{
+
+	return 0;
+}
 
 /*
 ================
@@ -205,6 +213,10 @@ int start_client_TCP()
     return 0;
 }
 
+int start_client_UDP()
+{
+	return 0;
+}
 
 /*
 ================
@@ -215,7 +227,6 @@ int start_client_TCP()
 */
 int proc_arguments(int n, char* args[])
 {
-	// 2d ARRAY ATTEMPT
 	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
@@ -224,7 +235,7 @@ int proc_arguments(int n, char* args[])
 	{
 		if (strcmp(args[1], "-p") == 0)
 		{
-			strcpy(port, args[2]);
+			strcpy(storedData[2], args[2]);
 		}
 		return 1;
     }
