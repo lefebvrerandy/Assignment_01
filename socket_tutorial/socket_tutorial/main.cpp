@@ -9,7 +9,7 @@
 */
 
 
-// Prototypes - For both OS
+//Prototypes
 int validateAddress(char string[]);
 int validatePort(char string[]);
 int validateBlockSize(char string[]);
@@ -18,15 +18,15 @@ int start_server_TCP();
 int start_server_UDP();
 int start_client_TCP();
 int start_client_UDP();
+SOCKET createSocket(void);
+clock_t stopWatch(void);
+double calculateElapsedTime(clock_t startTime, clock_t endTime);
 
 //Prototypes OS specific
 #if defined _WIN32
 
 #elif defined __linux__
-SOCKET createSocket(void);
-clock_t stopWatch(void);
-double calculateElapsedTime(clock_t startTime, clock_t endTime);
- 
+
 #endif
 
 // Global struct for all client connection info
