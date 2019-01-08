@@ -26,7 +26,7 @@ int start_client_UDP();
 SOCKET createSocket(void);
 clock_t stopWatch(void);
 double calculateElapsedTime(clock_t startTime, clock_t endTime);
-
+ 
 #endif
 
 // Global struct for all client connection info
