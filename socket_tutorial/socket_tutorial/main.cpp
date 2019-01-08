@@ -72,9 +72,10 @@ typedef int SOCKET;
 #define MESSAGE_SIZE 256
 
 /*
-================
-  server functions
-================
+*  FUNCTION      : start_server
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
 */
 int start_server()
 {
@@ -121,9 +122,10 @@ int start_server()
 }
 
 /*
-================
-  server TCP
-================
+*  FUNCTION      : start_server_protocol
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
 */
 int start_server_protocol(int tcp_or_udp)
 {
@@ -198,16 +200,16 @@ int start_server_protocol(int tcp_or_udp)
 }
 
 /*
-================
-  client function
-================
+*  FUNCTION      : start_client_protocol
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
 */
 int start_client_protocol(int tcp_or_udp)
 {
-    struct sockaddr_in socketAddress;	//local address variable
-    int      boundSocketHandle;			//Holds transmission results
-    hostent* h;							//server host entry (holds IPs, etc)
+    hostent* hostIdentifier;			//Represent an entry in the hosts database
     const char local_host[] = "localhost";
+
 
 	//clock_t startTime = stopWatch();
 	/*
@@ -217,13 +219,13 @@ int start_client_protocol(int tcp_or_udp)
 	//double elapsedTime = calculateElapsedTime(startTime, endTime);
 
 
-    //Clear the socket struct before initializing it
-    memset((void*)&socketAddress, 0, sizeof(socketAddress));
-    socketAddress.sin_addr.s_addr = inet_addr(local_host);
+	struct sockaddr_in socketAddress;								//local address variable
+    memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initializing it
+    socketAddress.sin_addr.s_addr = inet_addr(local_host);			//
     if(INADDR_NONE == socketAddress.sin_addr.s_addr)
 	{
-        h = gethostbyname(local_host);
-        if(NULL == h) 
+        hostIdentifier = gethostbyname(local_host);
+        if(NULL == hostIdentifier) 
 		{
             perror("Could not get host by name");
             return -1;
@@ -231,44 +233,36 @@ int start_client_protocol(int tcp_or_udp)
     }
 	else 
 	{
-        h = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);
-        if(NULL == h) {
+        hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);
+        if(NULL == hostIdentifier) {
             perror("Could not get host by address");
             return -1;
         }
     }
 
    
-	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    
-    openSocketHandle = socket(AF_INET, SOCK_STREAM, tcp_or_udp);
-
-	SOCKET openSocketHandle = createSocket();
-	socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);
 	if(openSocketHandle == INVALID_SOCKET)
 	{
 		perror("[ERROR]: Could not open the client socket");
 		return -1;
 	}
 
+
     // setup the rest of our local address
     socketAddress.sin_family = AF_INET;
-    socketAddress.sin_addr   = *((in_addr*)*h->h_addr_list);
+    socketAddress.sin_addr   = *((in_addr*)*hostIdentifier->h_addr_list);
     socketAddress.sin_port   = htons(PORT);
 
-    // a little user interaction... ;)
-    printf("Connecting... ");
-    fflush(stdout);
 
     // connect to the server
-    boundSocketHandle = connect(openSocketHandle, (sockaddr*)&socketAddress, sizeof(struct sockaddr));
-    if(SOCKET_ERROR == boundSocketHandle)
+	int boundSocketHandle = connectToServer(openSocketHandle, );
+    if(boundSocketHandle == SOCKET_ERROR)
 	{
-        perror("Cannot connect to server");
+        perror("[ERROR]: Cannot connect to server");
         closesocket(openSocketHandle);
         return -1;
     }
-    printf("connected\n");	//DEBUG remove before submission
 
 
     //recieve the servers packet and reply
@@ -287,11 +281,10 @@ int start_client_protocol(int tcp_or_udp)
 }
 
 /*
-================
-  process command line arguments
-
-  gets passed argc and argv from main()
-================
+*  FUNCTION      : proc_arguments
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
 */
 int proc_arguments(int n, char* args[])
 {
@@ -387,6 +380,13 @@ int proc_arguments(int n, char* args[])
     return 0;
 }
 
+
+/*
+*  FUNCTION      : validateAddress
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
+*/
 int validateAddress(char string[])
 {
 	int res = 0;
@@ -397,6 +397,13 @@ int validateAddress(char string[])
 	return res;
 }
 
+
+/*
+*  FUNCTION      : validatePort
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
+*/
 int validatePort(char string[])
 {
 	int res = 0;
@@ -406,6 +413,13 @@ int validatePort(char string[])
 	return res;
 }
 
+
+/*
+*  FUNCTION      : validateBlockSize
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
+*/
 int validateBlockSize(char string[])
 {
 	int res = 0;
@@ -415,6 +429,13 @@ int validateBlockSize(char string[])
 	return res;
 }
 
+
+/*
+*  FUNCTION      : validateNumOfBlocks
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
+*/
 int validateNumOfBlocks(char string[])
 {
 	int res = 0;
@@ -424,14 +445,6 @@ int validateNumOfBlocks(char string[])
 	return res;
 }
 
-/*
-================
-  program starts here
-
-  gets the number of arguments on the command line,
-    and the actual arguments
-================
-*/
 int main(int argc, char* argv[])
 {
     // startup WinSock in Windows
@@ -467,8 +480,22 @@ int main(int argc, char* argv[])
 
 
 /*
+*  FUNCTION      : connectToServer
+*  DESCRIPTION   : DEBUG
+*  PARAMETERS    : DEBUG
+*  RETURNS       : DEBUG
+*/
+int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
+{
+	int newBoundSocket = connect(openSocketHandle, (sockaddr*)&socketAddress, sizeof(struct sockaddr));
+	return newBoundSocket;
+
+}//Done
+
+
+/*
 *  FUNCTION      : createSocket
-*  DESCRIPTION   : This function is used to create and initialze a socket with the appropriate properties as set by the parameterd
+*  DESCRIPTION   : This function is used to create and initialze a socket with the appropriate properties as set by the parameters
 *  PARAMETERS    : DEBUG
 *  RETURNS       : SOCKET : Returns an initialized socket
 */
