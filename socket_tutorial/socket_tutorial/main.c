@@ -1,5 +1,6 @@
+
 /*
-*  FILE          : main.cp
+*  FILE          : main.c
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
