@@ -7,9 +7,20 @@
 */
 
 
+// Prototypes
+int validateAddress(char string[]);
+int validatePort(char string[]);
+int validateBlockSize(char string[]);
+int validateNumOfBlocks(char string[]);
+
+// Global struct for all client connection info
+char storedData[5][15];
+
 // standard C headers
 #include <string.h>
 #include <stdio.h>
+
+#pragma warning(disable: 4996)
 
 
 // include headers based on OS
@@ -37,7 +48,17 @@ typedef int SOCKET;
 
 /*
 ================
-  server function
+  server functions
+================
+*/
+int start_server()
+{
+
+}
+
+/*
+================
+  server TCP
 ================
 */
 int start_server_TCP()
@@ -187,15 +208,7 @@ int start_client_TCP()
 */
 int proc_arguments(int n, char* args[])
 {
-	char tempArgument[50] = { "" };
-	// CONVERT THIS TO A 2d ARRAY for easy access
-	char port[10] = {""};					//< Port of the server
-	char typeOfConnection[5] = { "" };		//< TCP or UDP
-	char ipAddressOfServer[15] = { "" };	//< Ip address of the server
-	char blockSize[3] = { "" };				//< Block size to send
-	char numOfBlocks[3] = { "" };			//< Number of blocks to send
 	// 2d ARRAY ATTEMPT
-	char storedData[5][15];
 	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
@@ -206,6 +219,7 @@ int proc_arguments(int n, char* args[])
 		{
 			strcpy(port, args[2]);
 		}
+		return 1;
     }
 
 	// If 10 arguments, must mean to start client.
@@ -222,20 +236,12 @@ int proc_arguments(int n, char* args[])
 
 		// Check the Type of Connection
 		if (strcmp(args[1], "-TCP") == 0)
-			strcpy(tempArgument, args[1]);
+			strcpy(storedData[0], args[1]);
 		else if (strcmp(args[1], "-UDP") == 0)
-			strcpy(tempArgument, args[1]);
-
-		// Check to see if tempArgument is empty, if so return an eror. If not, store into char array
-		if (strcmp((const char*)tempArgument[0], '\0') == 0) // THIS NEEDS TESTING
-			return -1;
-		else
-		{
-			strcpy(storedData[0], tempArgument);
-		}
+			strcpy(storedData[0], args[1]);
 
 		// Iterate through the arguments starting at 2 and iterating by 2 each time through the loop
-		int j = 1;
+		int j = 0;
 		for (int i = 2; i < 9; i++)
 		{
 
@@ -284,6 +290,14 @@ int proc_arguments(int n, char* args[])
 		
 	}
 
+	if (strcmp(storedData[0], "-TCP") == 0)
+	{
+		return 2;
+	}
+	else if (strcmp(storedData[0], "-UDP") == 0)
+	{
+		return 3;
+	}
     return 0;
 }
 
@@ -345,18 +359,15 @@ int main(int argc, char* argv[])
 	// If 5 arguments, must be start client.
     switch(proc_arguments(argc, argv))
     {
-    case 0:  // invalid options
-        printf("Usage: socket_tutorial [option]\n");
-        printf("Options:\n");
-        printf("-c - start a client\n");
-        printf("-s - start a server\n\n");
-        break;
     case 1:
-        start_server_TCP();  // start a server
+        start_server();
         break;
     case 2:
-        start_client_TCP();  // start a client
+        start_client_TCP();
         break;
+	case 3:
+		start_client_UDP();
+		break;
     }
 
     // cleanup WinSock in Windows
