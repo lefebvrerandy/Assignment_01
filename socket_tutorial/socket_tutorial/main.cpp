@@ -9,7 +9,7 @@
 */
 
 
-// Prototypes - For both OS
+//Prototypes
 int validateAddress(char string[]);
 int validatePort(char string[]);
 int validateBlockSize(char string[]);
