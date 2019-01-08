@@ -45,37 +45,42 @@ typedef int SOCKET;
 */
 int start_server_TCP()
 {
-    struct sockaddr_in addr, r_addr;  // address variables
-    SOCKET    s, t;                   // sockets
-    int       r;                      // to hold return values
-    socklen_t len = sizeof(r_addr);   // the length of our remote address
+	struct sockaddr_in socketAddress;		// address variables
+	struct sockaddr_in remoteAddress;		// address variables
+	SOCKET openSocketHandle;				//Sockets
+	SOCKET acceptedSocketConnection;		//Sockets
+	int    boundSocketHandle;				//Holds return values?
+	socklen_t addressLength = sizeof(remoteAddress);	// the length of our remote address
+
 
     // create the local socket
-    s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(INVALID_SOCKET == s) {
+	//Protocol/Address family, type of socket (socket stream ie. tcpip/datagram stream ie. UDP), end to end protocol
+	//PF_INET, SOCK_DGRAM, IPPROTO_UDP
+    openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(INVALID_SOCKET == openSocketHandle) {
         perror("Could not create socket");
         return -1;
     }
 
     // setup the local address variable
-    memset((void*)&addr, 0, sizeof(addr));
-    addr.sin_family      = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port        = htons(6868);
+    memset((void*)&socketAddress, 0, sizeof(socketAddress));
+    socketAddress.sin_family      = AF_INET;
+    socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+    socketAddress.sin_port        = htons(6868);
 
     // name the local socket
-    r = bind(s, (struct sockaddr*)&addr, sizeof(addr));
-    if(SOCKET_ERROR == r) {
+    boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
+    if(SOCKET_ERROR == boundSocketHandle) {
         perror("Could not bind to local socket");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
 
     // set the socket to listen for a connection
-    r = listen(s, SOMAXCONN);
-    if(SOCKET_ERROR == r) {
+    boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
+    if(SOCKET_ERROR == boundSocketHandle) {
         perror("Could not listen to local socket");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
 
@@ -84,10 +89,10 @@ int start_server_TCP()
     fflush(stdout);
 
     // wait for a connection
-    t = accept(s, (struct sockaddr*)&r_addr, &len);
-    if(INVALID_SOCKET == t) {
+    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&r_addr, &len);
+    if(INVALID_SOCKET == acceptedSocketConnection) {
         perror("Could not accept new connection");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
     printf("accepted.\n");
@@ -96,16 +101,16 @@ int start_server_TCP()
     char data[] = "Hello client!\0";
     char recieved[256];
     memset((void*)recieved, 0, sizeof(recieved));
-    send(t, data, strlen(data), 0);
+    send(acceptedSocketConnection, data, strlen(data), 0);
 
     // wait for a reply
-    recv(t, recieved, sizeof(recieved), 0);
+    recv(acceptedSocketConnection, recieved, sizeof(recieved), 0);
     printf("Client returned: %s\n", recieved);
 
     // cleanup is VERY, VERY important with sockets!!!
     // they are file descriptors (and you only get so many in the life of an OS)
-    closesocket(t);
-    closesocket(s);
+    closesocket(acceptedSocketConnection);
+    closesocket(openSocketHandle);
 
     return 0;
 }
