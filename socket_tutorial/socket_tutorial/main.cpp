@@ -187,13 +187,81 @@ int start_client_TCP()
 */
 int proc_arguments(int n, char* args[])
 {
-    // only one argument besides the actual command allowed
-    if(2 == n) {
-        if(0 == strcmp(args[1], "-s"))  // server
-            return 1;
-        else if(0 == strcmp(args[1], "-c"))  // client
-            return 2;
+	char tempArgument[50] = { "" };
+	// CONVERT THIS TO A 2d ARRAY for easy access
+	char port[10] = {""};					//< Port of the server
+	char typeOfConnection[5] = { "" };		//< TCP or UDP
+	char ipAddressOfServer[15] = { "" };	//< Ip address of the server
+	char blockSize[3] = { "" };				//< Block size to send
+	char numOfBlocks[3] = { "" };			//< Number of blocks to send
+	// 2d ARRAY ATTEMPT
+	char storedData[5][15];
+	char expectedArgument[5][15];
+
+
+    // only two argument besides the actual command allowed
+    if(n == 3) 
+	{
+		if (strcmp(args[1], "-p") == 0)
+		{
+			strcpy(port, args[2]);
+		}
     }
+
+	// If 10 arguments, must mean to start client.
+	else if (n == 10)
+	{
+
+
+		/*
+			This section checks and stores the proper arguments into place for later use
+			REFERENCE: INDEX LOCATION
+				0			1	 2		3	 4	 5		 6		   7	 8			9
+		./ispeed	-TCP/-UDP	-a ADDRESS	-p PORT		-s BLOCK_SIZE	-n NUM_BLOCKS
+		*/
+
+		// Iterate through the arguments starting at 
+		for (int i = 0; i < 9; i++)
+		{
+			i++;
+		}
+
+		// Type of Connection
+		if (strcmp(args[1], "-TCP") == 0)
+			strcpy(tempArgument, args[1]);
+		else if (strcmp(args[1], "-UDP") == 0)
+			strcpy(tempArgument, args[1]);
+
+			// Check to see if tempArgument is empty, if so return an eror. If not, store into char array
+		if (strcmp((const char*)tempArgument[0], '\0') == 0) // THIS NEEDS TESTING
+			return -1;
+		else
+		{
+			strcpy(typeOfConnection, tempArgument);
+			tempArgument[0] = '\0';
+		}
+
+
+		// Address
+		if (strcmp(args[2], "-a"))
+			strcpy(tempArgument, args[3]);
+
+		// Port
+		strcpy(tempArgument, args[5]);
+
+		// Block Size
+		strcpy(tempArgument, args[7]);
+
+		// Number of blocks
+		strcpy(tempArgument, args[9]);
+	}
+
+	// Not the correct amount of arguments.. Display the instructions (Might not be smart to display instructions
+	// because it will conflict with a batch file)..
+	else
+	{
+		
+	}
 
     return 0;
 }
@@ -216,6 +284,8 @@ int main(int argc, char* argv[])
 #endif
 
     // process the command line arguments
+	// If 1 argument, must be start server. 
+	// If 5 arguments, must be start client.
     switch(proc_arguments(argc, argv))
     {
     case 0:  // invalid options
