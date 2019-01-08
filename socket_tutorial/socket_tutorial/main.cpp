@@ -1,9 +1,11 @@
 /*
-================
-	Programmer:		
-	Course Code:	
-	Description:	
-================
+*  FILE          : main.c
+*  PROJECT       : CNTR 2115 - Assignment #1
+*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  FIRST VERSION : 2019-01-08
+*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for 
+*
+*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
 
@@ -19,11 +21,11 @@ char storedData[5][15];
 // standard C headers
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #pragma warning(disable: 4996)
 
-
-// include headers based on OS
+//OS Dependent Headers
 #if defined _WIN32
 #include <winsock.h>  // WinSock subsystem
 #elif defined __linux__
@@ -63,37 +65,42 @@ int start_server()
 */
 int start_server_TCP()
 {
-    struct sockaddr_in addr, r_addr;  // address variables
-    SOCKET    s, t;                   // sockets
-    int       r;                      // to hold return values
-    socklen_t len = sizeof(r_addr);   // the length of our remote address
+	struct sockaddr_in socketAddress;		// address variables
+	struct sockaddr_in remoteAddress;		// address variables
+	SOCKET openSocketHandle;				//Sockets
+	SOCKET acceptedSocketConnection;		//Sockets
+	int    boundSocketHandle;				//Holds return values?
+	socklen_t addressLength = sizeof(remoteAddress);	// the length of our remote address
+
 
     // create the local socket
-    s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(INVALID_SOCKET == s) {
+	//Protocol/Address family, type of socket (socket stream ie. tcpip/datagram stream ie. UDP), end to end protocol
+	//PF_INET, SOCK_DGRAM, IPPROTO_UDP
+    openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(INVALID_SOCKET == openSocketHandle) {
         perror("Could not create socket");
         return -1;
     }
 
     // setup the local address variable
-    memset((void*)&addr, 0, sizeof(addr));
-    addr.sin_family      = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port        = htons(6868);
+    memset((void*)&socketAddress, 0, sizeof(socketAddress));
+    socketAddress.sin_family      = AF_INET;
+    socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+    socketAddress.sin_port        = htons(6868);
 
     // name the local socket
-    r = bind(s, (struct sockaddr*)&addr, sizeof(addr));
-    if(SOCKET_ERROR == r) {
+    boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
+    if(SOCKET_ERROR == boundSocketHandle) {
         perror("Could not bind to local socket");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
 
     // set the socket to listen for a connection
-    r = listen(s, SOMAXCONN);
-    if(SOCKET_ERROR == r) {
+    boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
+    if(SOCKET_ERROR == boundSocketHandle) {
         perror("Could not listen to local socket");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
 
@@ -102,10 +109,10 @@ int start_server_TCP()
     fflush(stdout);
 
     // wait for a connection
-    t = accept(s, (struct sockaddr*)&r_addr, &len);
-    if(INVALID_SOCKET == t) {
+    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&r_addr, &len);
+    if(INVALID_SOCKET == acceptedSocketConnection) {
         perror("Could not accept new connection");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
     printf("accepted.\n");
@@ -114,16 +121,16 @@ int start_server_TCP()
     char data[] = "Hello client!\0";
     char recieved[256];
     memset((void*)recieved, 0, sizeof(recieved));
-    send(t, data, strlen(data), 0);
+    send(acceptedSocketConnection, data, strlen(data), 0);
 
     // wait for a reply
-    recv(t, recieved, sizeof(recieved), 0);
+    recv(acceptedSocketConnection, recieved, sizeof(recieved), 0);
     printf("Client returned: %s\n", recieved);
 
     // cleanup is VERY, VERY important with sockets!!!
     // they are file descriptors (and you only get so many in the life of an OS)
-    closesocket(t);
-    closesocket(s);
+    closesocket(acceptedSocketConnection);
+    closesocket(openSocketHandle);
 
     return 0;
 }
@@ -377,4 +384,31 @@ int main(int argc, char* argv[])
 
 
     return 0;
+}
+
+
+/*
+*  FUNCTION      : getSystemTime
+*  DESCRIPTION   : This function is used to act as a stopwatch, by using the system time feature and tracking time before stopping
+*  PARAMETERS    : bool watchStatus : Uses a boolean to signal if the stopwatch is ON (ie. TRUE), or off (ie. FALSE)
+*  RETURNS       : float : Returns a float indicating the elapsed time since the watch was turned on
+*
+*	NOTE: This function  was initially found online, however, the original soruce code has since been modified to suit the projects needs. 
+		   As a result, partial credit belongs to the original poster, as shown in the reference below. 
+		   Mingos.(2011). Get the current time in C [Online forum comment]. Retrieved on January 8, 2019, 
+			from https://stackoverflow.com/questions/5141960/get-the-current-time-in-c 
+*/
+float getSystemTime(bool watchStatus)
+{
+
+	if (watchStatus == TRUE)
+	{
+		time_t systemTime;
+		struct tm* timeinfo;
+
+		time(&systemTime);
+		timeinfo = localtime(&systemTime);
+		//printf("Current local time and date: %s", asctime(timeinfo));
+		//DEBUG NEED TO FIND A WAY 
+	}
 }
