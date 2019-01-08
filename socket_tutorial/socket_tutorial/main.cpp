@@ -431,6 +431,6 @@ clock_t stopWatch()
 */
 double calculateElapsedTime(clock_t startTime, clock_t endTime)
 {
-	double cpu_time_used = ((double)(endTime - startTime)) / CLOCKS_PER_SEC;
-	return cpu_time_used;
+	double elapsedTime = ((double)(endTime - startTime)) / CLOCKS_PER_SEC;
+	return elapsedTime;
 }
