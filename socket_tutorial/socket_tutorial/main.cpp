@@ -1,14 +1,8 @@
 /*
 ================
-  This file is part of a tutorial written for writing sockets
-  in C that are portable between Windows and Linux. It's meant
-  to give a basic understanding of the underlying socket process
-  and how to get a simple connection established over TCP and how
-  to send/recieve basic packets.
-
-  If this file is distributed, please include the full source package from
-  http://www.webpak.net/~energon/
-  It was given to you as a learning tool, so please pay it forward.
+	Programmer:		
+	Course Code:	
+	Description:	
 ================
 */
 
