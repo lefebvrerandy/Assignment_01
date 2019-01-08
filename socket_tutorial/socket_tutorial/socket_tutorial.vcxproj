@@ -69,10 +69,12 @@
     <ClCompile Include="client.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="server.c" />
+    <ClCompile Include="shared.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client.h" />
     <ClInclude Include="server.h" />
+    <ClInclude Include="shared.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
