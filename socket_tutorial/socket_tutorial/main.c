@@ -1,5 +1,6 @@
+
 /*
-*  FILE          : main.cp
+*  FILE          : main.c
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
@@ -16,8 +17,8 @@ int validateBlockSize(char string[]);
 int validateNumOfBlocks(char string[]);
 int start_server_protocol(int tcp_or_udp);
 int start_client_protocol(int tcp_or_udp);
-SOCKET createSocket(void);
-clock_t stopWatch(void);
+SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
+clock_t stopWatch(clock_t startTime, clock_t endTime);
 double calculateElapsedTime(clock_t startTime, clock_t endTime);
 
 //Prototypes OS specific
@@ -115,9 +116,6 @@ int start_server()
 
 #endif
 
-	// TEMP - default to TCP
-	//start_server_TCP();
-
 	return 0;
 }
 
@@ -209,7 +207,6 @@ int start_client_protocol(int tcp_or_udp)
 {
     hostent* hostIdentifier;			//Represent an entry in the hosts database
     const char local_host[] = "localhost";
-
 
 	//clock_t startTime = stopWatch();
 	/*
@@ -519,7 +516,7 @@ SOCKET createSocket(int protocolDomain, int socketType, int protocolType)
 		   GeeksForGeeks.(ND). How to measure time taken by a function in C?. Retrieved on January 8, 2019, 
 			from https://www.geeksforgeeks.org/how-to-measure-time-taken-by-a-program-in-c/
 */
-clock_t stopWatch(void)
+clock_t stopWatch(clock_t startTime, clock_t endTime)
 {
 	clock_t clockTime = clock();
 	return clockTime;
