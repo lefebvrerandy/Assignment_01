@@ -68,7 +68,7 @@ typedef int SOCKET;
 #define closesocket(s) close(s);  // Unix uses file descriptors, WinSock doesn't...
 #endif
 
-
+#define PORT 6868
 #define MESSAGE_SIZE 256
 
 /*
@@ -205,7 +205,6 @@ int start_server_protocol(int tcp_or_udp)
 int start_client_protocol(int tcp_or_udp)
 {
     struct sockaddr_in socketAddress;	//local address variable
-    SOCKET   openSocketHandle;			//Socket identifier
     int      boundSocketHandle;			//Holds transmission results
     hostent* h;							//server host entry (holds IPs, etc)
     const char local_host[] = "localhost";
@@ -239,6 +238,8 @@ int start_client_protocol(int tcp_or_udp)
         }
     }
 
+   
+	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     
     openSocketHandle = socket(AF_INET, SOCK_STREAM, tcp_or_udp);
 
@@ -253,7 +254,7 @@ int start_client_protocol(int tcp_or_udp)
     // setup the rest of our local address
     socketAddress.sin_family = AF_INET;
     socketAddress.sin_addr   = *((in_addr*)*h->h_addr_list);
-    socketAddress.sin_port   = htons(6868);
+    socketAddress.sin_port   = htons(PORT);
 
     // a little user interaction... ;)
     printf("Connecting... ");
@@ -270,13 +271,15 @@ int start_client_protocol(int tcp_or_udp)
     printf("connected\n");	//DEBUG remove before submission
 
 
-    // recieve the servers packet and reply
-    char data[] = "Hello server!\0";
-    char recieved[MESSAGE_SIZE];
-    memset((void*)recieved, 0, sizeof(recieved));
+    //recieve the servers packet and reply
+    char message[] = "outBoundMessage\0";
+    char recieved[MESSAGE_SIZE] = "";
+
+
+    memset((void*)recieved, 0, sizeof(recieved));		//Clear the 
     recv(openSocketHandle, recieved, sizeof(recieved), 0);
     printf("Server sent: %s\n", recieved);
-    send(openSocketHandle, data, strlen(data), 0);
+    send(openSocketHandle, message, strlen(message), 0);
 
 
     closesocket(openSocketHandle);
@@ -462,10 +465,20 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-SOCKET createSocket(void)
-{
 
-}
+/*
+*  FUNCTION      : createSocket
+*  DESCRIPTION   : This function is used to create and initialze a socket with the appropriate properties as set by the parameterd
+*  PARAMETERS    : DEBUG
+*  RETURNS       : SOCKET : Returns an initialized socket
+*/
+SOCKET createSocket(int protocolDomain, int socketType, int protocolType)
+{
+	SOCKET newSocket = socket(protocolDomain, socketType, protocolType);
+	return newSocket;
+
+}//Done
+
 
 /*
 *  FUNCTION      : stopWatch
