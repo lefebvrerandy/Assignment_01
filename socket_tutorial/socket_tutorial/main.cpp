@@ -9,14 +9,20 @@
 */
 
 
-// Prototypes
+//Prototypes
 int validateAddress(char string[]);
 int validatePort(char string[]);
 int validateBlockSize(char string[]);
 int validateNumOfBlocks(char string[]);
+SOCKET createSocket(void);
+clock_t stopWatch(void);
+double calculateElapsedTime(clock_t startTime, clock_t endTime);
+
+
 
 // Global struct for all client connection info
 char storedData[5][15];
+
 
 // standard C headers
 #include <string.h>
@@ -47,6 +53,8 @@ typedef int SOCKET;
 #define closesocket(s) close(s);  // Unix uses file descriptors, WinSock doesn't...
 #endif
 
+
+#define MESSAGE_SIZE 256
 
 /*
 ================
@@ -151,10 +159,10 @@ int start_server_UDP()
 */
 int start_client_TCP()
 {
-    struct sockaddr_in addr;  // local address variable
-    SOCKET   s;               // local socket
-    int      r;               // will hold return values
-    hostent* h;               // server host entry (holds IPs, etc)
+    struct sockaddr_in socketAddress;	//local address variable
+    SOCKET   openSocketHandle;			//Socket identifier
+    int      boundSocketHandle;			//Holds transmission results
+    hostent* h;							//server host entry (holds IPs, etc)
     const char local_host[] = "localhost";
 
 	//clock_t startTime = stopWatch();
@@ -164,59 +172,69 @@ int start_client_TCP()
 	//clock_t endTime = stopWatch();
 	//double elapsedTime = calculateElapsedTime(startTime, endTime);
 
-    // get the server host entry
-    memset((void*)&addr, 0, sizeof(addr));
-    addr.sin_addr.s_addr = inet_addr(local_host);
-    if(INADDR_NONE == addr.sin_addr.s_addr) {
+
+    //Clear the socket struct before initializing it
+    memset((void*)&socketAddress, 0, sizeof(socketAddress));
+    socketAddress.sin_addr.s_addr = inet_addr(local_host);
+    if(INADDR_NONE == socketAddress.sin_addr.s_addr)
+	{
         h = gethostbyname(local_host);
-        if(NULL == h) {
+        if(NULL == h) 
+		{
             perror("Could not get host by name");
             return -1;
         }
-    } else {
-        h = gethostbyaddr((const char*)&addr.sin_addr, sizeof(struct sockaddr_in), AF_INET);
+    }
+	else 
+	{
+        h = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);
         if(NULL == h) {
             perror("Could not get host by address");
             return -1;
         }
     }
 
-    // create the local socket
-    s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(INVALID_SOCKET == s) {
-        perror("Could not create socket");
-        return -1;
-    }
+    
+    openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	SOCKET openSocketHandle = createSocket();
+	socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if(openSocketHandle == INVALID_SOCKET)
+	{
+		perror("[ERROR]: Could not open the client socket");
+		return -1;
+	}
 
     // setup the rest of our local address
-    addr.sin_family = AF_INET;
-    addr.sin_addr   = *((in_addr*)*h->h_addr_list);
-    addr.sin_port   = htons(6868);
+    socketAddress.sin_family = AF_INET;
+    socketAddress.sin_addr   = *((in_addr*)*h->h_addr_list);
+    socketAddress.sin_port   = htons(6868);
 
     // a little user interaction... ;)
     printf("Connecting... ");
     fflush(stdout);
 
     // connect to the server
-    r = connect(s, (sockaddr*)&addr, sizeof(struct sockaddr));
-    if(SOCKET_ERROR == r) {
+    boundSocketHandle = connect(openSocketHandle, (sockaddr*)&socketAddress, sizeof(struct sockaddr));
+    if(SOCKET_ERROR == boundSocketHandle)
+	{
         perror("Cannot connect to server");
-        closesocket(s);
+        closesocket(openSocketHandle);
         return -1;
     }
-    printf("connected.\n");
+    printf("connected\n");	//DEBUG remove before submission
+
 
     // recieve the servers packet and reply
     char data[] = "Hello server!\0";
-    char recieved[256];
+    char recieved[MESSAGE_SIZE];
     memset((void*)recieved, 0, sizeof(recieved));
-    recv(s, recieved, sizeof(recieved), 0);
+    recv(openSocketHandle, recieved, sizeof(recieved), 0);
     printf("Server sent: %s\n", recieved);
-    send(s, data, strlen(data), 0);
+    send(openSocketHandle, data, strlen(data), 0);
 
-    // cleanup, cleanup, cleanup!!!
-    closesocket(s);
 
+    closesocket(openSocketHandle);
     return 0;
 }
 
@@ -404,33 +422,41 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+SOCKET createSocket(void)
+{
+
+}
 
 /*
 *  FUNCTION      : stopWatch
-*  DESCRIPTION   : 
-*  PARAMETERS    : 
-*  RETURNS       : 
+*  DESCRIPTION   : This function is used to get the number of clock ticks since the process started. It returns the tick count
+				   and is used in conjunction with calculateElapsedTime() to calulcate the total time requried for an operation to complete
+*  PARAMETERS    : void: The function takes no arguments
+*  RETURNS       : clock_t : Returns the number of clock ticks since the process was started 
 *
 *	NOTE: This function  was initially found online, however, the original soruce code has since been modified to suit the projects needs. 
 		   As a result, partial credit belongs to the original authors on the website. For more information, please see the reference,
 		   GeeksForGeeks.(ND). How to measure time taken by a function in C?. Retrieved on January 8, 2019, 
 			from https://www.geeksforgeeks.org/how-to-measure-time-taken-by-a-program-in-c/
 */
-clock_t stopWatch()
+clock_t stopWatch(void)
 {
 	clock_t clockTime = clock();
 	return clockTime;
-}
+
+}//Done
 
 
 /*
 *  FUNCTION      : calculateElapsedTime
-*  DESCRIPTION   :
-*  PARAMETERS    :
-*  RETURNS       :
+*  DESCRIPTION   : This function is used to calculate the elapsed time for message transimssion between the networked clients and server
+*  PARAMETERS    : clock_t startTime : Start time for when the transmission began
+				   clock_t endTime	 : End time for when the transmission had finished
+*  RETURNS       : double : Returns the elepased time between the two clock_t values
 */
 double calculateElapsedTime(clock_t startTime, clock_t endTime)
 {
 	double elapsedTime = ((double)(endTime - startTime)) / CLOCKS_PER_SEC;
 	return elapsedTime;
-}
+
+}//Done
