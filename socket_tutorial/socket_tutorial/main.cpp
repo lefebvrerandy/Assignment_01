@@ -31,6 +31,12 @@ double calculateElapsedTime(clock_t startTime, clock_t endTime);
 
 // Global struct for all client connection info
 char storedData[5][15];
+// storedData Breakdown
+//	[0][] = TCP || UDP
+//	[1][] = IP Address
+//	[2][] = Port
+//	[3][] = Size of buffer to send
+//	[4][] = Number of blocks to send
 
 
 // standard C headers
@@ -80,6 +86,13 @@ int start_server()
 	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_TCP, NULL, 0, NULL);
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_UDP, NULL, 0, NULL);
 
+	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
+
+	for (int i = 0; i < 2; i++)
+	{
+		CloseHandle(thread_windows_server[i]);
+	}
+
 #elif defined __linux__
 	pthread_t thread_linux_server[2];
 	if (pthread_create(&thread_linux_server[0], NULL, start_server_TCP, NULL) != 0)
@@ -105,6 +118,8 @@ int start_server()
 
 	// TEMP - default to TCP
 	//start_server_TCP();
+
+	return 0;
 }
 
 /*
