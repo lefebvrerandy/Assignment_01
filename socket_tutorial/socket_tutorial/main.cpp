@@ -1,18 +1,21 @@
 /*
-================
-	Programmer:		
-	Course Code:	
-	Description:	
-================
+*  FILE          : main.c
+*  PROJECT       : CNTR 2115 - Assignment #1
+*  PROGRAMMER    : Randy Lefebvre & Bence Karner
+*  FIRST VERSION : 2019-01-08
+*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for 
+*
+*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
 
-// standard C headers
+//OS Independent Headers
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 
-// include headers based on OS
+//OS Dependent Headers
 #if defined _WIN32
 #include <winsock.h>  // WinSock subsystem
 #elif defined __linux__
@@ -309,4 +312,31 @@ int main(int argc, char* argv[])
 
 
     return 0;
+}
+
+
+/*
+*  FUNCTION      : getSystemTime
+*  DESCRIPTION   : This function is used to act as a stopwatch, by using the system time feature and tracking time before stopping
+*  PARAMETERS    : bool watchStatus : Uses a boolean to signal if the stopwatch is ON (ie. TRUE), or off (ie. FALSE)
+*  RETURNS       : float : Returns a float indicating the elapsed time since the watch was turned on
+*
+*	NOTE: This function  was initially found online, however, the original soruce code has since been modified to suit the projects needs. 
+		   As a result, partial credit belongs to the original poster, as shown in the reference below. 
+		   Mingos.(2011). Get the current time in C [Online forum comment]. Retrieved on January 8, 2019, 
+			from https://stackoverflow.com/questions/5141960/get-the-current-time-in-c 
+*/
+float getSystemTime(bool watchStatus)
+{
+
+	if (watchStatus == TRUE)
+	{
+		time_t systemTime;
+		struct tm* timeinfo;
+
+		time(&systemTime);
+		timeinfo = localtime(&systemTime);
+		//printf("Current local time and date: %s", asctime(timeinfo));
+		//DEBUG NEED TO FIND A WAY 
+	}
 }
