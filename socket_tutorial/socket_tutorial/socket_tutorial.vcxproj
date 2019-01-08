@@ -66,7 +66,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="linuxClient.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="winClient.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="linuxClient.h" />
+    <ClInclude Include="winClient.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

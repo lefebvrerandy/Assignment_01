@@ -251,7 +251,6 @@ int start_client_TCP()
     openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	SOCKET openSocketHandle = createSocket();
-	socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(openSocketHandle == INVALID_SOCKET)
 	{
 		perror("[ERROR]: Could not open the client socket");
@@ -477,8 +476,11 @@ int main(int argc, char* argv[])
 
 SOCKET createSocket(void)
 {
+	SOCKET newSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	return newSocket;
 
-}
+}//Done
+
 
 /*
 *  FUNCTION      : stopWatch

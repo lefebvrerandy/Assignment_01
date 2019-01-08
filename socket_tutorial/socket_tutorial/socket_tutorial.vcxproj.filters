@@ -18,5 +18,19 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="winClient.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linuxClient.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="winClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linuxClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
