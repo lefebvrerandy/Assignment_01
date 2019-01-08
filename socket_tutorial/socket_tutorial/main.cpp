@@ -56,7 +56,6 @@ int start_server_TCP()
     // create the local socket
 	//Protocol/Address family, type of socket (socket stream ie. tcpip/datagram stream ie. UDP), end to end protocol
 	//PF_INET, SOCK_DGRAM, IPPROTO_UDP
-	//openSocketHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(INVALID_SOCKET == openSocketHandle) {
         perror("Could not create socket");
@@ -90,7 +89,7 @@ int start_server_TCP()
     fflush(stdout);
 
     // wait for a connection
-    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&r_addr, &len);
+    acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressLength);
     if(INVALID_SOCKET == acceptedSocketConnection) {
         perror("Could not accept new connection");
         closesocket(openSocketHandle);
@@ -129,6 +128,13 @@ int start_client_TCP()
     int      r;               // will hold return values
     hostent* h;               // server host entry (holds IPs, etc)
     const char local_host[] = "localhost";
+
+	//clock_t startTime = stopWatch();
+	/*
+		Do all the work here
+	*/
+	//clock_t endTime = stopWatch();
+	//double elapsedTime = calculateElapsedTime(startTime, endTime);
 
     // get the server host entry
     memset((void*)&addr, 0, sizeof(addr));
@@ -379,27 +385,31 @@ int main(int argc, char* argv[])
 
 
 /*
-*  FUNCTION      : getSystemTime
-*  DESCRIPTION   : This function is used to act as a stopwatch, by using the system time feature and tracking time before stopping
-*  PARAMETERS    : bool watchStatus : Uses a boolean to signal if the stopwatch is ON (ie. TRUE), or off (ie. FALSE)
-*  RETURNS       : float : Returns a float indicating the elapsed time since the watch was turned on
+*  FUNCTION      : stopWatch
+*  DESCRIPTION   : 
+*  PARAMETERS    : 
+*  RETURNS       : 
 *
 *	NOTE: This function  was initially found online, however, the original soruce code has since been modified to suit the projects needs. 
-		   As a result, partial credit belongs to the original poster, as shown in the reference below. 
-		   Mingos.(2011). Get the current time in C [Online forum comment]. Retrieved on January 8, 2019, 
-			from https://stackoverflow.com/questions/5141960/get-the-current-time-in-c 
+		   As a result, partial credit belongs to the original authors on the website. For more information, please see the reference,
+		   GeeksForGeeks.(ND). How to measure time taken by a function in C?. Retrieved on January 8, 2019, 
+			from https://www.geeksforgeeks.org/how-to-measure-time-taken-by-a-program-in-c/
 */
-float getSystemTime(bool watchStatus)
+clock_t stopWatch()
 {
+	clock_t clockTime = clock();
+	return clockTime;
+}
 
-	if (watchStatus == TRUE)
-	{
-		time_t systemTime;
-		struct tm* timeinfo;
 
-		time(&systemTime);
-		timeinfo = localtime(&systemTime);
-		//printf("Current local time and date: %s", asctime(timeinfo));
-		//DEBUG NEED TO FIND A WAY 
-	}
+/*
+*  FUNCTION      : calculateElapsedTime
+*  DESCRIPTION   :
+*  PARAMETERS    :
+*  RETURNS       :
+*/
+double calculateElapsedTime(clock_t startTime, clock_t endTime)
+{
+	double cpu_time_used = ((double)(endTime - startTime)) / CLOCKS_PER_SEC;
+	return cpu_time_used;
 }
