@@ -79,6 +79,7 @@ int start_server_TCP()
     // create the local socket
 	//Protocol/Address family, type of socket (socket stream ie. tcpip/datagram stream ie. UDP), end to end protocol
 	//PF_INET, SOCK_DGRAM, IPPROTO_UDP
+	//openSocketHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     openSocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(INVALID_SOCKET == openSocketHandle) {
         perror("Could not create socket");
