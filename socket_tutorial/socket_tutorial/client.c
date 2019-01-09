@@ -54,7 +54,8 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	}
 	//Setup the rest of our local address
 	socketAddress.sin_family = AF_INET;
-	socketAddress.sin_addr = *((struct in_addr*)*hostIdentifier->h_addr_list);
+		//socketAddress.sin_addr = *((struct in_addr*)*hostIdentifier->h_addr_list);
+	inet_aton(storedData[1], &socketAddress.sin_addr.s_addr);
 	socketAddress.sin_port = htons(storedData[2]);
 
 

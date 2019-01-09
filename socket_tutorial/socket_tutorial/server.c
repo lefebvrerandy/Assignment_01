@@ -12,6 +12,7 @@
 #include "shared.h"
 #include "client.h"
 #include "server.h"
+#include "WS2tcpip.h"
 
 
 /*
@@ -122,7 +123,6 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 			}
 			else
 			{
-
 				networkStage++;
 				struct sockaddr_in remoteAddress;
 
