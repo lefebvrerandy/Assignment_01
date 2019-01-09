@@ -46,3 +46,25 @@ typedef int SOCKET;
 #define SWITCH_OPTIONS 5
 #define MAX_ARGUMENT_LENGTH 15
 #define ERROR -1
+
+
+//Prototypes
+int validateAddress(char string[]);
+int validatePort(char string[]);
+int validateBlockSize(char string[]);
+int validateNumOfBlocks(char string[]);
+int start_server_protocol(int tcp_or_udp);
+int start_client_protocol(int tcp_or_udp);
+SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
+
+
+//Global struct for all client connection info
+char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
+// storedData Breakdown
+//	[0][] = TCP || UDP
+//	[1][] = IP Address
+//	[2][] = Port
+//	[3][] = Size of buffer to send
+//	[4][] = Number of blocks to send
+
+
