@@ -31,33 +31,35 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 
 /*
 *  FUNCTION      : sendMessage
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to send a message to the other networked applications, 
+*				   accross the supplied SOCKET
+*  PARAMETERS    : The parameters are as follows,
+*	SOCKET connectedSocket	: Socket through which the message will be sent
+*	int message[]			: Contains the entire message
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
-int sendMessage(SOCKET connectedSocket, int message[])
+int sendMessage(SOCKET connectedSocket, int messageBuffer[])
 {
-	int sendStatus = 0;
-	//int messageBuffer[MESSAGE_BUFFER_SIZE] = "";
-	//memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	//sendStatus = send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
-
-
+	//memset((void*)messageBuffer, 0, sizeof(messageBuffer));	DEBUG MAYBE REMOVE
+	int sendStatus = send(connectedSocket, messageBuffer, strlen(messageBuffer), 0);
 	return sendStatus;
 }
 
 
 /*
 *  FUNCTION      : receiveMessage
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to recieve a message from the clients/servers, and save 
+*				   the return into the inbound message buffer
+*  PARAMETERS    : Parameters are as follows,
+*	SOCKET connectedSocket : 
+*	int messageBuffer[]	   : 
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
-int receiveMessage()
+int receiveMessage(SOCKET connectedSocket, int messageBuffer[])
 {
 	int receiveStatus = 0;
+	receiveStatus = recv(connectedSocket, messageBuffer, sizeof(messageBuffer), 0);
 	return receiveStatus;
-	//DEBUG INCOMPLETE
 }
 
 /*
@@ -66,24 +68,32 @@ int receiveMessage()
 *  PARAMETERS    : This function takes no arguments
 *  RETURNS       : int : Returns -1 as defined by the constant ERROR
 */
-int setErrorState(int connectionStage)
+int setErrorState(int errorState)
 {
-	switch (connectionStage)
+	switch (errorState)
 	{
-		case 0:
+		case SOCKET_CREATION_ERROR:
 			perror("[ERROR]: Could not create socket");
 			break;
 
-		case 1:
-			perror("[ERROR]: Could not bind to the socket");
+		case SOCKET_BIND_ERROR:
+			perror("[ERROR]: Could not bind to socket");
 			break;
 
-		case 2:
+		case SOCKET_LISTEN_ERROR:
 			perror("[ERROR]: Could not listen to the socket");
 			break;
 
-		case 3:
+		case SOCKET_CONNECTION_ERROR:
 			perror("[ERROR]: Could not accept new connection");
+			break;
+
+		case SOCKET_SEND_ERROR:
+			perror("[ERROR]: Could not send message");
+			break;
+
+		case SOCKET_RECEIVE_ERROR:
+			perror("[ERROR]: Could not receive message");
 			break;
 
 		default:

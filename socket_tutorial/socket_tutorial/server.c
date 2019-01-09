@@ -78,7 +78,6 @@ int start_server()
 int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 {
 	int networkResult = 1;				//Denotes the success or failure of the servers operation
-	int networkStage = 0;				//Tracks the stage of network connection for the socket
 	SOCKET acceptedSocketConnection;	//Socket used for connecting to the clients
 
 
@@ -87,11 +86,10 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);	//SET THE PARAMETER FOR THE FUNCTION TO INCLUDE SOCK_STREAM or SOCK_DGRAM
 	if (openSocketHandle == INVALID_SOCKET)
 	{
-		networkResult = setErrorState(networkStage);							//Set return to -1, and print an error for the stage of connection
+		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
 	}
 	else
 	{
-		networkStage++;
 		struct sockaddr_in socketAddress;
 		memset((void*)&socketAddress, 0, sizeof(socketAddress));				//Clear the address struct for initialization
 		
@@ -108,22 +106,18 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		int boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
 		if (boundSocketHandle == SOCKET_ERROR)
 		{
-			networkResult = setErrorState(networkStage);						//Set return to -1, and print an error for the stage of connection
+			networkResult = setErrorState(SOCKET_BIND_ERROR);					//Set return to -1, and print an error for the stage of connection
 		}
 		else
 		{
-			networkStage++;
-
-
 			//Stage 3: Listen for an incoming connection to the open socket
 			boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
 			if (boundSocketHandle == SOCKET_ERROR)
 			{
-				networkResult = setErrorState(networkStage);					//Set return to -1, and print an error for the stage of connection
+				networkResult = setErrorState(SOCKET_LISTEN_ERROR);				//Set return to -1, and print an error for the stage of connection
 			}
 			else
 			{
-				networkStage++;
 				struct sockaddr_in remoteAddress;
 
 
@@ -132,22 +126,14 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 				acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
 				if (acceptedSocketConnection == INVALID_SOCKET)
 				{
-					networkResult = setErrorState(networkStage);				//Set return to -1, and print an error for the stage of connection
+					networkResult = setErrorState(SOCKET_CONNECTION_ERROR);		//Set return to -1, and print an error for the stage of connection
 				}
 				else
 				{
-					networkStage++;
-
-
 					//Stage 5: Send a reply to the client
-					//char outboundMessage[] = "serverReply\0";
-					//char recievedMessage[MESSAGE_BUFFER_SIZE] = "";
-					//memset((void*)recievedMessage, 0, sizeof(recievedMessage));
-					//send(acceptedSocketConnection, outboundMessage, strlen(outboundMessage), 0);
+					//Stage 6: Receive the clients reply
 
 
-					////Stage 6: Receive the clients reply
-					//recv(acceptedSocketConnection, recievedMessage, sizeof(recievedMessage), 0);
 				}
 			}
 		}

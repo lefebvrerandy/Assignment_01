@@ -29,7 +29,6 @@
 #endif
 
 
-
 //Redefine some types and constants based on OS
 #if defined _WIN32
 	//DEBUG need to fill in
@@ -41,8 +40,7 @@ typedef int SOCKET;
 #endif
 
 
-
-//Defined constants
+//Defined application constants
 #pragma once
 #define MESSAGE_BUFFER_SIZE 1000
 #define SWITCH_OPTIONS 5
@@ -50,13 +48,22 @@ typedef int SOCKET;
 #define ERROR -1
 
 
+//Network error states
+#define SOCKET_CREATION_ERROR -1
+#define SOCKET_BIND_ERROR -2
+#define SOCKET_LISTEN_ERROR -3
+#define SOCKET_CONNECTION_ERROR -4
+#define SOCKET_SEND_ERROR -5
+#define SOCKET_RECEIVE_ERROR -6
+
 
 //Prototypes
 int start_server_protocol(int stream_or_Datagram, int tcp_or_udp);
 int start_client_protocol(int stream_or_Datagram, int tcp_or_udp);
-int sendMessage();
-int receiveMessage();
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
+int sendMessage(SOCKET connectedSocket, int messageBuffer[]);
+int receiveMessage(SOCKET connectedSocket, int messageBuffer[]);
+int setErrorState(int errorState);
 
 
 
