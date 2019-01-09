@@ -22,7 +22,7 @@
 */
 int start_client_protocol(int tcp_or_udp)
 {
-	hostent* hostIdentifier;			//Represent an entry in the hosts database
+	struct hostent* hostIdentifier;			//Represent an entry in the hosts database
 	const char local_host[] = "localhost";
 
 	//clock_t startTime = stopWatch();
@@ -65,7 +65,7 @@ int start_client_protocol(int tcp_or_udp)
 
 	// setup the rest of our local address
 	socketAddress.sin_family = AF_INET;
-	socketAddress.sin_addr = *((in_addr*)*hostIdentifier->h_addr_list);
+	socketAddress.sin_addr = *((struct in_addr*)*hostIdentifier->h_addr_list);
 	socketAddress.sin_port = htons(storedData[2]);
 
 
