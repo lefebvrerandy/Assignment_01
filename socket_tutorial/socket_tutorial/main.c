@@ -3,7 +3,7 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for 
+*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for DEBUG
 *
 *  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
@@ -18,7 +18,6 @@
 
 
 //Standard C headers
-#include <stdio.h>
 #include "client.h"
 #include "server.h"
 #include "shared.h"
@@ -28,16 +27,18 @@
 /*
 *  FUNCTION      : proc_arguments
 *  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  PARAMETERS    : Parameters are as follows, 
+*	int argumentCount: DEBUG
+*	char* args[]	 : DEBUG
+*  RETURNS       : int : DEBUG
 */
-int proc_arguments(int n, char* args[])
+int proc_arguments(int argumentCount, char* args[])
 {
-	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
+	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-argumentCount"} };
 
 
     // only two argument besides the actual command allowed
-    if(n == 3) 
+    if(argumentCount == 3) 
 	{
 		if (strcmp(args[1], "-p") == 0)
 		{
@@ -47,7 +48,7 @@ int proc_arguments(int n, char* args[])
     }
 
 	// If 10 arguments, must mean to start client.
-	else if (n == 10)
+	else if (argumentCount == 10)
 	{
 
 

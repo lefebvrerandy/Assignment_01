@@ -3,10 +3,9 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains DEBUG
-*
-*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
+*  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application. 
 */
+
 
 
 //Standard C headers
@@ -15,29 +14,32 @@
 #include <time.h>
 
 
+
 //OS Dependent Headers
 #if defined _WIN32
-#include <winsock.h>		// WinSock subsystem
-#include <windows.h>		//
+#include <winsock.h>		//Windows socket operations
+#include <windows.h>		//Windows API for 32/64 bit application
 #elif defined __linux__	
-#include <unistd.h>			//
-#include <netdb.h>			//
-#include <sys/types.h>		//
-#include <sys/socket.h>		//
-#include <arpa/inet.h>		//
-#include <pthread.h>		//
+#include <unistd.h>			//UNIX POSIX operating system API
+#include <netdb.h>			//UNIX network database operations
+#include <sys/types.h>		//UNIX clock & threading operations
+#include <sys/socket.h>		//UNIX socket operations
+#include <arpa/inet.h>		//UNIX internet operations
+#include <pthread.h>		//UNIX threading operations
 #endif
+
 
 
 //Redefine some types and constants based on OS
 #if defined _WIN32
-typedef int socklen_t;  // Unix socket length
+	//DEBUG need to fill in
 #elif defined __linux__
 typedef int SOCKET;
-#define INVALID_SOCKET -1			// WinSock invalid socket
-#define SOCKET_ERROR   -1			// basic WinSock error
-#define closesocket(s) close(s);	// Unix uses file descriptors, WinSock doesn't...
+	#define INVALID_SOCKET -1			// WinSock invalid socket DEBUG never used
+	#define SOCKET_ERROR   -1			// basic WinSock error	  DEBUG never used
+	#define closesocket(s) close(s);	// Unix uses file descriptors, WinSock doesn't... DEBUG change comment
 #endif
+
 
 
 //Defined constants
@@ -48,14 +50,14 @@ typedef int SOCKET;
 #define ERROR -1
 
 
+
 //Prototypes
-int validateAddress(char string[]);
-int validatePort(char string[]);
-int validateBlockSize(char string[]);
-int validateNumOfBlocks(char string[]);
 int start_server_protocol(int tcp_or_udp);
 int start_client_protocol(int tcp_or_udp);
+int sendMessage();
+int receiveMessage();
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
+
 
 
 //Global struct for all client connection info

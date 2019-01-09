@@ -4,24 +4,24 @@
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
 *  DESCRIPTION   : This file contains DEBUG
-*
-*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
 
-#include "server.h";
-#include "shared.h";
+#include "shared.h"
+#include "client.h"
+#include "server.h"
 
 
 /*
 *  FUNCTION      : start_server
 *  DESCRIPTION   : DEBUG
 *  PARAMETERS    : DEBUG
-*  RETURNS       : int :
+*  RETURNS       : int : DEBUG
 */
 int start_server()
 {
-	// Spawn two threads. One for TCP, one for UDP
+
+	//Spawn two threads. One for TCP, one for UDP
 
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
@@ -39,12 +39,12 @@ int start_server()
 	pthread_t thread_linux_server[2];
 	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)IPPROTO_TCP) != 0)
 	{
-		// An error has occured
+		// An error has occurred
 		perror("Could not create Thread.");
 	}
 	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)IPPROTO_UDP) != 0)
 	{
-		// An error has occured
+		// An error has occurred
 		perror("Could not create Thread.");
 	}
 
@@ -64,84 +64,91 @@ int start_server()
 
 /*
 *  FUNCTION      : start_server_protocol
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  DESCRIPTION   : This method is used to create, bind, listen, connect, and receive across standard socket for the server. 
+				   The function acts as a high level controller by calling each of the required functions and setting the properties 
+				   of the socket based on the parameters provided by the user from the command line
+*  PARAMETERS    : int tcp_or_udp : 
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
 int start_server_protocol(int tcp_or_udp)
 {
-	int networkResult = 0;				//Denotes the success or failure of the servers operation
+	int networkResult = 1;				//Denotes the success or failure of the servers operation
+	int networkStage = 0;				//Tracks the stage of network connection for the socket
 	SOCKET acceptedSocketConnection;	//Socket used for connecting to the clients
 
 
-	//Create local socket
-	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);
+
+	//Stage 1: Create local socket
+	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);	//SET THE PARAMETER FOR THE FUNCTION TO INCLUDE SOCK_STREAM or SOCK_DGRAM
 	if (openSocketHandle == INVALID_SOCKET)
 	{
-		perror("[ERROR]: Could not create socket");
-		networkResult = ERROR;
-
+		networkResult = setErrorState(networkStage);							//Set return to -1, and print an error for the stage of connection
 	}
 	else
 	{
-
-		//Clear the socket address variable, and initialize it's fields
+		networkStage++;
 		struct sockaddr_in socketAddress;
-		memset((void*)&socketAddress, 0, sizeof(socketAddress));
-		socketAddress.sin_family = AF_INET;								//Address family internet protocol
-		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);				//Convert from host byte order to network byte order
-		socketAddress.sin_port = htons(storedData[2]);					//Port defined by CLA
+		memset((void*)&socketAddress, 0, sizeof(socketAddress));				//Clear the address struct for initialization
+		
 
 
-		//Bind to the open socket
+		//Stage 2A: Initialize the socket struct
+		socketAddress.sin_family = AF_INET;										//Address family internet protocol
+		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
+		socketAddress.sin_port = htons(storedData[2]);							//Port defined by CLA
+
+
+
+		//Stage 2B: Bind to the open socket
 		int boundSocketHandle = bind(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
 		if (boundSocketHandle == SOCKET_ERROR)
 		{
-			perror("[ERROR]: Could not bind to the socket");
-			networkResult = ERROR;
-
+			networkResult = setErrorState(networkStage);						//Set return to -1, and print an error for the stage of connection
 		}
 		else
 		{
+			networkStage++;
 
-			//Listen for an incominig connection to the open socket
+
+			//Stage 3: Listen for an incoming connection to the open socket
 			boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
 			if (boundSocketHandle == SOCKET_ERROR)
 			{
-				perror("[ERROR]: Could not listen to the socket");
-				networkResult = ERROR;
-
+				networkResult = setErrorState(networkStage);					//Set return to -1, and print an error for the stage of connection
 			}
 			else
 			{
 
-				//Accept the incoming client connection
+				networkStage++;
 				struct sockaddr_in remoteAddress;
-				socklen_t addressLength = sizeof(remoteAddress);
-				acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressLength);
-				if (INVALID_SOCKET == acceptedSocketConnection)
-				{
-					perror("[ERROR]: Could not accept new connection");
-					networkResult = ERROR;
 
+
+				//Stage 4: Accept the incoming client connection
+				socklen_t addressSize = sizeof(remoteAddress);
+				acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
+				if (acceptedSocketConnection == INVALID_SOCKET)
+				{
+					networkResult = setErrorState(networkStage);				//Set return to -1, and print an error for the stage of connection
 				}
 				else
 				{
-
-					//Send a reply to the client
-					char outboundMessage[] = "serverReply\0";
-					char recievedMessage[MESSAGE_BUFFER_SIZE] = "";
-					memset((void*)recievedMessage, 0, sizeof(recievedMessage));
-					send(acceptedSocketConnection, outboundMessage, strlen(outboundMessage), 0);
+					networkStage++;
 
 
-					//Recieve the clients reply
-					recv(acceptedSocketConnection, recievedMessage, sizeof(recievedMessage), 0);
-					printf("Client returned: %s\n", recievedMessage);
+					//Stage 5: Send a reply to the client
+					//char outboundMessage[] = "serverReply\0";
+					//char recievedMessage[MESSAGE_BUFFER_SIZE] = "";
+					//memset((void*)recievedMessage, 0, sizeof(recievedMessage));
+					//send(acceptedSocketConnection, outboundMessage, strlen(outboundMessage), 0);
+
+
+					////Stage 6: Receive the clients reply
+					//recv(acceptedSocketConnection, recievedMessage, sizeof(recievedMessage), 0);
 				}
 			}
 		}
 	}
+
 
 	//Clean up before exiting
 	closesocket(acceptedSocketConnection);

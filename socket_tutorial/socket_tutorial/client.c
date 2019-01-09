@@ -9,8 +9,9 @@
 */
 
 
-#include "client.h";
-#include "shared.h";
+#include "shared.h"
+#include "client.h"
+#include "server.h"
 
 
 /*
