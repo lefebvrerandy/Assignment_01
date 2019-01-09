@@ -3,7 +3,9 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains DEBUG
+*  DESCRIPTION   : This file contains all the functions required to operate the sever component of the application.
+*				   Functions are included for adding multi thread support, opening TCP & UDP sockets, and sending/recieving 
+*				   messages from the clients
 */
 
 
@@ -14,15 +16,15 @@
 
 /*
 *  FUNCTION      : start_server
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : int : DEBUG
+*  DESCRIPTION   : The function is used to create two threads for the server, in order to create a UDP and TCP socket 
+*				   for each instance of the server
+*  PARAMETERS    : void : This function takes no arguments
+*  RETURNS       : int : Returns constant zero indicating the conditional server threading was completed without serious error
 */
 int start_server()
 {
 
 	//Spawn two threads. One for TCP, one for UDP
-
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
 	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_TCP, 0, NULL);
@@ -65,12 +67,14 @@ int start_server()
 /*
 *  FUNCTION      : start_server_protocol
 *  DESCRIPTION   : This method is used to create, bind, listen, connect, and receive across standard socket for the server. 
-				   The function acts as a high level controller by calling each of the required functions and setting the properties 
-				   of the socket based on the parameters provided by the user from the command line
-*  PARAMETERS    : int tcp_or_udp : 
+*				   The function acts as a high level controller by calling each of the required functions and setting the properties 
+*				   of the socket based on the parameters provided by the user from the command line
+*  PARAMETERS    : Function parameters are as follows
+*	int stream_or_datagram : Denotes if thes socket is of type SOCK_STREAM or SOCK_DGRAM
+*	int tcp_or_udp		   : Denotes if the protocol is DEBUG
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
-int start_server_protocol(int tcp_or_udp)
+int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 {
 	int networkResult = 1;				//Denotes the success or failure of the servers operation
 	int networkStage = 0;				//Tracks the stage of network connection for the socket

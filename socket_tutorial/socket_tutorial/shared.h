@@ -52,8 +52,8 @@ typedef int SOCKET;
 
 
 //Prototypes
-int start_server_protocol(int tcp_or_udp);
-int start_client_protocol(int tcp_or_udp);
+int start_server_protocol(int stream_or_Datagram, int tcp_or_udp);
+int start_client_protocol(int stream_or_Datagram, int tcp_or_udp);
 int sendMessage();
 int receiveMessage();
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);

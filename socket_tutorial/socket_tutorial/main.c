@@ -208,10 +208,10 @@ int main(int argc, char* argv[])
         start_server();
         break;
     case 2:
-        start_client_protocol(IPPROTO_TCP);
+        start_client_protocol(SOCK_STREAM, IPPROTO_TCP);
         break;
 	case 3:
-		start_client_protocol(IPPROTO_UDP);
+		start_client_protocol(SOCK_DGRAM, IPPROTO_UDP);
 		break;
     }
 

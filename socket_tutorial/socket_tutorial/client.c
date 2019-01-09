@@ -3,9 +3,9 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains DEBUG
-*
-*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
+*  DESCRIPTION   : This file contains the functions and logic required to execute the client's required functionality.
+*				   Functions are included for creating, connecting, and closing sockets, and for sending/receiving messages
+*				   to and from the server
 */
 
 
@@ -16,86 +16,96 @@
 
 /*
 *  FUNCTION      : start_client_protocol
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  DESCRIPTION   : This finction is used to create the client instance of the application. The client
+*  PARAMETERS    : Parameteres are as follows,
+*	int stream_or_datagram : Denotes if thes socket is of type SOCK_STREAM or SOCK_DGRAM
+*	int tcp_or_udp		   : Denotes if the protocol is DEBUG
+*  RETURNS       : int : Returns positive if the operation completed without error
 */
-int start_client_protocol(int tcp_or_udp)
+int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 {
-	struct hostent* hostIdentifier;			//Represent an entry in the hosts database
-	const char local_host[] = "localhost";
 
-	//clock_t startTime = stopWatch();
-	/*
-		Do all the work here
-	*/
-	//clock_t endTime = stopWatch();
-	//double elapsedTime = calculateElapsedTime(startTime, endTime);
+	int clientReturn = 0;						//Denotes if the function completed it's operation successfully
+	int networkStage = 0;						//
 
 
 	struct sockaddr_in socketAddress;								//local address variable
-	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initializing it
-	socketAddress.sin_addr.s_addr = inet_addr(local_host);			//
-	if (INADDR_NONE == socketAddress.sin_addr.s_addr)
+	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
+	const char clientHostID[] = "client";							//DEBUG 
+	socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//
+	struct hostent* hostIdentifier;									//Represent an entry in the hosts database
+	if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//
 	{
-		hostIdentifier = gethostbyname(local_host);
-		if (NULL == hostIdentifier)
+
+		hostIdentifier = gethostbyname(clientHostID);
+		if (hostIdentifier == NULL)
 		{
-			perror("Could not get host by name");
-			return ERROR;
+			clientReturn = setErrorState(networkStage);
 		}
 	}
 	else
 	{
 		hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);
-		if (NULL == hostIdentifier) {
-			perror("Could not get host by address");
-			return ERROR;
+		if (hostIdentifier == NULL)
+		{
+			//Could not get host by address
+			clientReturn = setErrorState(networkStage);
 		}
 	}
-
-
-	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);
-	if (openSocketHandle == INVALID_SOCKET)
-	{
-		perror("[ERROR]: Could not open the client socket");
-		return ERROR;
-	}
-
-
-	// setup the rest of our local address
+	//Setup the rest of our local address
 	socketAddress.sin_family = AF_INET;
 	socketAddress.sin_addr = *((struct in_addr*)*hostIdentifier->h_addr_list);
 	socketAddress.sin_port = htons(storedData[2]);
 
 
-	// connect to the server
-	int boundSocketHandle = connectToServer(openSocketHandle, );
-	if (boundSocketHandle == SOCKET_ERROR)
+	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
+	if (openSocketHandle == INVALID_SOCKET)
 	{
-		perror("[ERROR]: Cannot connect to server");
-		return ERROR;
+		clientReturn = setErrorState(networkStage);	//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
+	}
+	else
+	{
+
+		//Connect to the server
+		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
+		if (boundSocketHandle == SOCKET_ERROR)
+		{
+			clientReturn = setErrorState(networkStage);		//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
+		}
+		else
+		{
+			//Stage DEBUG
+			//clock_t startTime = stopWatch();
+			/*
+				//Prepare the outboundMessages for transmission
+				while (1)	//DEBUG REMOVE INFINITE LOOP BEFFORE SUBMISSION
+				{
+					//int message[MESSAGE_BUFFER_SIZE] = generateRandomNumber();
+					sendMessage(openSocketHandle, message);
+					send(openSocketHandle, message, strlen(message), 0); DEBUG MOVE INTO sendMessage()
+
+
+					memset((void*)recieved, 0, sizeof(recieved));
+					char recieved[MESSAGE_BUFFER_SIZE] = "";
+					recv(openSocketHandle, recieved, sizeof(recieved), 0);
+				}
+			*/
+			//clock_t endTime = stopWatch();
+			//double elapsedTime = calculateElapsedTime(startTime, endTime);
+		}
 	}
 
-
-	//Recieve the servers reply
-	char message[] = "outBoundMessage\0";
-	char recieved[MESSAGE_BUFFER_SIZE] = "";
-	memset((void*)recieved, 0, sizeof(recieved));
-	recv(openSocketHandle, recieved, sizeof(recieved), 0);
-	printf("Server sent: %s\n", recieved);
-	send(openSocketHandle, message, strlen(message), 0);
-
-
 	closesocket(openSocketHandle);
-	return 0;
+	return clientReturn;
 }
 
 /*
 *  FUNCTION      : connectToServer
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  DESCRIPTION   : This function is used to connect to the socket as defined by the arguments
+*  PARAMETERS    : Parameters are as follows,
+*	SOCKET openSocketHandle : The socket identifier which will be used to connect the client and server
+*	struct sockaddr_in socketAddress : The socket struct containing the client's/socket properties
+*  RETURNS       : int : Returns an integer ddenoting if the operation was completed successfully
 */
 int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 {
@@ -103,6 +113,7 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 	return newBoundSocket;
 
 }//Done
+
 
 
 /*

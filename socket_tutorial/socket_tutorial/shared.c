@@ -38,8 +38,12 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 int sendMessage()
 {
 	int sendStatus = 0;
+	//int messageBuffer[MESSAGE_BUFFER_SIZE] = "";
+	//memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+	//send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+
+
 	return sendStatus;
-	//DEBUG INCOMPLETE
 }
 
 
