@@ -51,16 +51,17 @@ int sendMessage(SOCKET connectedSocket, int messageBuffer[])
 *  DESCRIPTION   : This function is used to recieve a message from the clients/servers, and save 
 *				   the return into the inbound message buffer
 *  PARAMETERS    : Parameters are as follows,
-*	SOCKET connectedSocket : 
-*	int messageBuffer[]	   : 
+*	SOCKET connectedSocket : Socket through which the messages will be received
+*	int messageBuffer[]	   : Array containing the recieved message from the other application
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
 int receiveMessage(SOCKET connectedSocket, int messageBuffer[])
 {
-	int receiveStatus = 0;
-	receiveStatus = recv(connectedSocket, messageBuffer, sizeof(messageBuffer), 0);
+	int receiveStatus = recv(connectedSocket, messageBuffer, sizeof(messageBuffer), 0);
 	return receiveStatus;
-}
+
+}//Done
+
 
 /*
 *  FUNCTION      : setErrorState

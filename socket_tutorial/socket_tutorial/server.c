@@ -97,7 +97,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		//Stage 2A: Initialize the socket struct
 		socketAddress.sin_family = AF_INET;										//Address family internet protocol
 		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
-		socketAddress.sin_port = htons(storedData[2]);							//Port defined by CLA
+		socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);			//Port defined by CLA
 
 
 		//Print server connection info to the screen		// NEEDS TESTING
@@ -116,9 +116,11 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		IPbuffer = inet_ntoa(*((struct in_addr*)
 			host_entry->h_addr_list[0]));
 
+
 		printf("Hostname: %s\n", hostbuffer);
 		printf("Host IP: %s\n", IPbuffer);
 		printf("Port: %s\n", hostPort);
+
 
 
 		//Stage 2B: Bind to the open socket
@@ -149,7 +151,6 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 				}
 				else
 				{
-					//Stage 5: Send a reply to the client
 					//Stage 6: Receive the clients reply
 
 

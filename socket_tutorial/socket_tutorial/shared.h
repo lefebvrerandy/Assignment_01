@@ -7,14 +7,13 @@
 */
 
 
-
 //Standard C headers
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 //OS Dependent Headers
 #if defined _WIN32
 #include <winsock2.h>		//Windows socket operations
@@ -42,19 +41,39 @@ typedef int SOCKET;
 
 //Defined application constants
 #pragma once
-#define MESSAGE_BUFFER_SIZE 1000
-#define SWITCH_OPTIONS 5
-#define MAX_ARGUMENT_LENGTH 15
-#define ERROR -1
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define MESSAGE_BUFFER_SIZE			1000
+#define SWITCH_OPTIONS				5
+#define MAX_ARGUMENT_LENGTH			15
+#define ERROR						-1
 
 
 //Network error states
-#define SOCKET_CREATION_ERROR -1
-#define SOCKET_BIND_ERROR -2
-#define SOCKET_LISTEN_ERROR -3
+#define SOCKET_CREATION_ERROR	-1
+#define SOCKET_BIND_ERROR		-2
+#define SOCKET_LISTEN_ERROR		-3
 #define SOCKET_CONNECTION_ERROR -4
-#define SOCKET_SEND_ERROR -5
-#define SOCKET_RECEIVE_ERROR -6
+#define SOCKET_SEND_ERROR		-5
+#define SOCKET_RECEIVE_ERROR	-6
+
+
+//Location ID's for storedDatas command line arguments
+#define CLA_SOCKET_TYPE			0
+#define CLA_IP_ADDRESS			1
+#define CLA_PORT_NUMBER			2
+#define CLA_BUFFER_SIZE			3
+#define CLA_NUMBER_OF_BLOCKS	4
+
+
+//Global struct for all client connection info
+char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
+/* storedData Breakdown: 
+	[0][] = TCP || UDP
+	[1][] = IP Address
+	[2][] = Port
+	[3][] = Size of buffer to send
+	[4][] = Number of blocks to send 
+*/
 
 
 //Prototypes
@@ -64,16 +83,5 @@ SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
 int sendMessage(SOCKET connectedSocket, int messageBuffer[]);
 int receiveMessage(SOCKET connectedSocket, int messageBuffer[]);
 int setErrorState(int errorState);
-
-
-
-//Global struct for all client connection info
-char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
-// storedData Breakdown
-//	[0][] = TCP || UDP
-//	[1][] = IP Address
-//	[2][] = Port
-//	[3][] = Size of buffer to send
-//	[4][] = Number of blocks to send
 
 

@@ -25,10 +25,7 @@
 int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 {
 
-	int clientReturn = 0;						//Denotes if the function completed it's operation successfully
-	int networkStage = 0;						//
-
-
+	int clientReturn = 0;											//Denotes if the function completed it's operation successfully
 	struct sockaddr_in socketAddress;								//local address variable
 	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
 	const char clientHostID[] = "client";							//DEBUG what do?
@@ -62,7 +59,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
 	if (openSocketHandle == INVALID_SOCKET)
 	{
-		clientReturn = setErrorState(networkStage);			//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
+		clientReturn = setErrorState(SOCKET_CREATION_ERROR);
 	}
 	else
 	{
@@ -71,12 +68,12 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
 		if (boundSocketHandle == SOCKET_ERROR)
 		{
-			clientReturn = setErrorState(networkStage);		//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
+			clientReturn = setErrorState(SOCKET_CONNECTION_ERROR);
 		}
 		else
 		{
-			int sendStatus = 0;
-			int errorCount = 0;
+			//int sendStatus = 0;
+			//int errorCount = 0;
 			//Stage DEBUG
 			//clock_t startTime = stopWatch();
 			/*
@@ -182,3 +179,21 @@ double calculateElapsedTime(clock_t startTime, clock_t endTime)
 	return elapsedTime;
 
 }//Done
+
+
+/*
+*  FUNCTION      : printResults
+*  DESCRIPTION   : This function is used to print the results of the client-server interaction
+*  PARAMETERS    : Parameters are as follows,
+*	int size : The size of the blocks used during the sending procedure
+*	int sent : The nunmber of blocks sent
+*	int time : The time taken to send the blocks
+*	int speed : The speed of message transmission
+*	int missing : The count of messaged that were missing
+*	int disordered : The count of messages that were disordered
+*  RETURNS       : void  : Function has no return value
+*/
+void printResults(int size, int sent, int time, int speed, int missing, int disordered)
+{
+	printf("Size: %d Sent: %d, Time: %d, Speed: %d, Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
+}
