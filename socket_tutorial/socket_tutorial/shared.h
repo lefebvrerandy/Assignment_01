@@ -14,10 +14,10 @@
 #include <time.h>
 #include <stdlib.h>
 
-
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 //OS Dependent Headers
 #if defined _WIN32
-#include <winsock.h>		//Windows socket operations
+#include <winsock2.h>		//Windows socket operations
 #include <windows.h>		//Windows API for 32/64 bit application
 #elif defined __linux__	
 #include <unistd.h>			//UNIX POSIX operating system API

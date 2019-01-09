@@ -12,7 +12,6 @@
 #include "shared.h"
 #include "client.h"
 #include "server.h"
-#include "WS2tcpip.h"
 
 
 /*
@@ -102,6 +101,26 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
 		socketAddress.sin_port = htons(storedData[2]);							//Port defined by CLA
 
+
+		//Print server connection info to the screen		// NEEDS TESTING
+		char hostbuffer[256];
+		char *IPbuffer;
+		struct hostent *host_entry;
+		int hostname;
+
+		char hostPort[10];
+		strcpy(hostPort, socketAddress.sin_port);
+
+		hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+		host_entry = gethostbyname(hostbuffer);
+		// To convert an Internet network 
+		// address into ASCII string 
+		IPbuffer = inet_ntoa(*((struct in_addr*)
+			host_entry->h_addr_list[0]));
+
+		printf("Hostname: %s\n", hostbuffer);
+		printf("Host IP: %s\n", IPbuffer);
+		printf("Port: %s\n", hostPort);
 
 
 		//Stage 2B: Bind to the open socket

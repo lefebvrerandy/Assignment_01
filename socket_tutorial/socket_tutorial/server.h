@@ -6,6 +6,7 @@
 *  DESCRIPTION   : This file contains the function prototypes used by the server application to execute it's functionality in full
 */
 
+#include "shared.h"
 
 //Function prototypes
 int validateAddress(char string[]);
