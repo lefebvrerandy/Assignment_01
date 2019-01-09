@@ -34,7 +34,7 @@
 */
 int proc_arguments(int argumentCount, char* args[])
 {
-	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-argumentCount"} };
+	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
     // only two argument besides the actual command allowed

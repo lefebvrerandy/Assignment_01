@@ -6,6 +6,7 @@
 *  DESCRIPTION   : This file contains the function prototypes used by the clients to execute their functionality in full
 */
 
+#include "shared.h"
 
 //Function prototypes
 int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress);
