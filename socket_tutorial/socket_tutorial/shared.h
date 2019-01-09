@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-
+#include <stdlib.h>
 
 
 //OS Dependent Headers
@@ -44,7 +44,7 @@ typedef int SOCKET;
 
 //Defined constants
 #pragma once
-#define MESSAGE_BUFFER_SIZE 256
+#define MESSAGE_BUFFER_SIZE 1000
 #define SWITCH_OPTIONS 5
 #define MAX_ARGUMENT_LENGTH 15
 #define ERROR -1

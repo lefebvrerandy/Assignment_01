@@ -30,7 +30,7 @@
 *  PARAMETERS    : Parameters are as follows, 
 *	int argumentCount: DEBUG
 *	char* args[]	 : DEBUG
-*  RETURNS       : int : DEBUG
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int proc_arguments(int argumentCount, char* args[])
 {
@@ -131,7 +131,7 @@ int proc_arguments(int argumentCount, char* args[])
 *  FUNCTION      : validateAddress
 *  DESCRIPTION   : DEBUG
 *  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int validateAddress(char string[])
 {
@@ -148,7 +148,7 @@ int validateAddress(char string[])
 *  FUNCTION      : validatePort
 *  DESCRIPTION   : DEBUG
 *  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int validatePort(char string[])
 {
@@ -164,7 +164,7 @@ int validatePort(char string[])
 *  FUNCTION      : validateBlockSize
 *  DESCRIPTION   : DEBUG
 *  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int validateBlockSize(char string[])
 {
@@ -180,7 +180,7 @@ int validateBlockSize(char string[])
 *  FUNCTION      : validateNumOfBlocks
 *  DESCRIPTION   : DEBUG
 *  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int validateNumOfBlocks(char string[])
 {

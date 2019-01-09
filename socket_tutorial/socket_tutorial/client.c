@@ -31,13 +31,13 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	struct sockaddr_in socketAddress;								//local address variable
 	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
-	const char clientHostID[] = "client";							//DEBUG 
-	socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//
+	const char clientHostID[] = "client";							//DEBUG what do?
+	socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//DEBUG what do?
 	struct hostent* hostIdentifier;									//Represent an entry in the hosts database
-	if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//
+	if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//DEBUG what do?
 	{
 
-		hostIdentifier = gethostbyname(clientHostID);
+		hostIdentifier = gethostbyname(clientHostID);				//DEBUG what do?
 		if (hostIdentifier == NULL)
 		{
 			clientReturn = setErrorState(networkStage);
@@ -45,7 +45,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	}
 	else
 	{
-		hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);
+		hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);	//DEBUG what do?
 		if (hostIdentifier == NULL)
 		{
 			//Could not get host by address
@@ -61,7 +61,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
 	if (openSocketHandle == INVALID_SOCKET)
 	{
-		clientReturn = setErrorState(networkStage);	//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
+		clientReturn = setErrorState(networkStage);			//DEBUG SET THE STAGE AND MAKE PRINTS GENERIC
 	}
 	else
 	{
@@ -74,17 +74,22 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 		}
 		else
 		{
+			int sendStatus = 0;
+			int errorCount = 0;
 			//Stage DEBUG
 			//clock_t startTime = stopWatch();
 			/*
 				//Prepare the outboundMessages for transmission
 				while (1)	//DEBUG REMOVE INFINITE LOOP BEFFORE SUBMISSION
 				{
-					//int message[MESSAGE_BUFFER_SIZE] = generateRandomNumber();
-					sendMessage(openSocketHandle, message);
+					//int message[MESSAGE_BUFFER_SIZE] = 0;
+					sendStatus = sendMessage(openSocketHandle, message[]);
 					send(openSocketHandle, message, strlen(message), 0); DEBUG MOVE INTO sendMessage()
-
-
+					if (sendStatus == ERROR)
+					{
+						errorCount++ //Increment error count
+					}
+					 
 					memset((void*)recieved, 0, sizeof(recieved));
 					char recieved[MESSAGE_BUFFER_SIZE] = "";
 					recv(openSocketHandle, recieved, sizeof(recieved), 0);
@@ -114,6 +119,33 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 
 }//Done
 
+
+/*
+*  FUNCTION      : fillMessageBuffer
+*  DESCRIPTION   : This function is used to fill the messageBuffer with numbers 0 - 9
+*  PARAMETERS    : Parameters are as follows,
+*	int messageBuffer[] : Message buffer which will be filled with integers
+*	int bufferSize		: Buffer size set outside of the function, and used to set the target loop count
+*  RETURNS       : void : The function has no return value
+*/
+void fillMessageBuffer(int messageBuffer[], int bufferSize)
+{
+	int index, elementValue;
+	index = elementValue = 0;
+	for (index = 0; index < bufferSize; index++)	//Message buffer size can increase from 1000 - 10,000 bytes
+	{
+		if (elementValue < 10)
+		{
+			messageBuffer[index] = elementValue;	//Fill the message buffer with the elements value from 0 - 9
+			elementValue++;
+		}
+		else
+		{
+			elementValue = 0;						//Reset the value once passed a value of 9
+		}
+	}
+
+}//Done
 
 
 /*

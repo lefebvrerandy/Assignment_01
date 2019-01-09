@@ -35,12 +35,12 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 *  PARAMETERS    : DEBUG
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
-int sendMessage()
+int sendMessage(SOCKET connectedSocket, int message[])
 {
 	int sendStatus = 0;
 	//int messageBuffer[MESSAGE_BUFFER_SIZE] = "";
 	//memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	//send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+	//sendStatus = send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
 
 
 	return sendStatus;
