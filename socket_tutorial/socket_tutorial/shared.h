@@ -81,7 +81,7 @@ char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 
 
 //Prototypes
-int start_server_protocol(int stream_or_Datagram, int tcp_or_udp);
+int start_server_protocol(int* tcpOrUdp);
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
 int sendMessage(SOCKET connectedSocket, char messageBuffer[]);
 int receiveMessage(SOCKET connectedSocket, char messageBuffer[]);

@@ -25,13 +25,12 @@ int start_server()
 	//Spawn two threads. One for TCP, one for UDP
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
-	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_TCP, 0, NULL);
+	int tcpOrUdp[2] = { {SOCK_STREAM},{IPPROTO_TCP} };
+	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpOrUdp, 0, NULL);
 	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
 
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
-
 	Sleep(1000000);
-
 	for (int i = 0; i < 2; i++)
 	{
 		CloseHandle(thread_windows_server[i]);
@@ -74,7 +73,7 @@ int start_server()
 *	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDO
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
-int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
+int start_server_protocol(int* tcpOrUdp)
 {
 	int networkResult = 1;				//Denotes the success or failure of the servers operation
 	SOCKET acceptedSocketConnection;	//Socket used for connecting to the clients
@@ -82,7 +81,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 1: Create local socket
-	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
+	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
 	if (openSocketHandle == -1)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
@@ -108,7 +107,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		int hostname;
 
 		char hostPort[10];
-		strcpy(hostPort, socketAddress.sin_port);
+		strcpy(hostPort, storedData[CLA_PORT_NUMBER]);
 
 		hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 		host_entry = gethostbyname(hostbuffer);
