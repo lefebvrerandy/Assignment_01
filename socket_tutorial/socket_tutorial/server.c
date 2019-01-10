@@ -70,8 +70,8 @@ int start_server()
 *				   The function acts as a high level controller by calling each of the required functions and setting the properties 
 *				   of the socket based on the parameters provided by the user from the command line
 *  PARAMETERS    : Function parameters are as follows
-*	int stream_or_datagram : Denotes if thes socket is of type SOCK_STREAM or SOCK_DGRAM
-*	int tcp_or_udp		   : Denotes if the protocol is DEBUG
+*	int stream_or_datagram : Denotes if the socket is of type SOCK_STREAM or SOCK_DGRAM
+*	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDO
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
 int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
@@ -82,7 +82,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 1: Create local socket
-	SOCKET openSocketHandle = createSocket(AF_INET, SOCK_STREAM, tcp_or_udp);	//SET THE PARAMETER FOR THE FUNCTION TO INCLUDE SOCK_STREAM or SOCK_DGRAM
+	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
 	if (openSocketHandle == INVALID_SOCKET)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
@@ -100,7 +100,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);			//Port defined by CLA
 
 
-		//Print server connection info to the screen		// NEEDS TESTING
+		//Print server connection info to the screen		//DEBUG NEEDS TESTING
 		char hostbuffer[256];
 		char *IPbuffer;
 		struct hostent *host_entry;
@@ -153,6 +153,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 				{
 					//Stage 6: Receive the clients reply
 
+					networkResult = receiveMessage(acceptedSocketConnection, );
 
 				}
 			}

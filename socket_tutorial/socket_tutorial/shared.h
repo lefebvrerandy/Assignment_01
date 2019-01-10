@@ -3,7 +3,7 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application. 
+*  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application.
 */
 
 
@@ -55,6 +55,7 @@ typedef int SOCKET;
 #define SOCKET_CONNECTION_ERROR -4
 #define SOCKET_SEND_ERROR		-5
 #define SOCKET_RECEIVE_ERROR	-6
+#define SOCKET_HOST_ERROR		-7
 
 
 //Location ID's for storedDatas command line arguments
@@ -78,10 +79,9 @@ char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 
 //Prototypes
 int start_server_protocol(int stream_or_Datagram, int tcp_or_udp);
-int start_client_protocol(int stream_or_Datagram, int tcp_or_udp);
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-int sendMessage(SOCKET connectedSocket, int messageBuffer[]);
-int receiveMessage(SOCKET connectedSocket, int messageBuffer[]);
+int sendMessage(SOCKET connectedSocket, char messageBuffer[]);
+int receiveMessage(SOCKET connectedSocket, char messageBuffer[]);
 int setErrorState(int errorState);
 
 

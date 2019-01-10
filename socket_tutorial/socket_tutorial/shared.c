@@ -18,7 +18,7 @@
 *  PARAMETERS    : parameters are as follows
 *	int addressFamily : AF_INET or PF_INET
 *	int socketType	: SOCK_STREAM or SOCK_DGRAM
-*	int protocolType: DEBUG
+*	int protocolType: IPPROTO_TCP or IPPROTO_UDO
 *  RETURNS       : SOCKET : Returns an initialized socket
 */
 SOCKET createSocket(int addressFamily, int socketType, int protocolType)
@@ -32,15 +32,14 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 /*
 *  FUNCTION      : sendMessage
 *  DESCRIPTION   : This function is used to send a message to the other networked applications, 
-*				   accross the supplied SOCKET
+*				   across the supplied SOCKET
 *  PARAMETERS    : The parameters are as follows,
 *	SOCKET connectedSocket	: Socket through which the message will be sent
 *	int message[]			: Contains the entire message
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
-int sendMessage(SOCKET connectedSocket, int messageBuffer[])
+int sendMessage(SOCKET connectedSocket, char messageBuffer[])
 {
-	//memset((void*)messageBuffer, 0, sizeof(messageBuffer));	DEBUG MAYBE REMOVE
 	int sendStatus = send(connectedSocket, messageBuffer, strlen(messageBuffer), 0);
 	return sendStatus;
 }
@@ -48,14 +47,14 @@ int sendMessage(SOCKET connectedSocket, int messageBuffer[])
 
 /*
 *  FUNCTION      : receiveMessage
-*  DESCRIPTION   : This function is used to recieve a message from the clients/servers, and save 
+*  DESCRIPTION   : This function is used to receive a message from the clients/servers, and save 
 *				   the return into the inbound message buffer
 *  PARAMETERS    : Parameters are as follows,
 *	SOCKET connectedSocket : Socket through which the messages will be received
-*	int messageBuffer[]	   : Array containing the recieved message from the other application
+*	int messageBuffer[]	   : Array containing the received message from the other application
 *  RETURNS       : int : Returns an integer indicating if the process was a success or failure
 */
-int receiveMessage(SOCKET connectedSocket, int messageBuffer[])
+int receiveMessage(SOCKET connectedSocket, char messageBuffer[])
 {
 	int receiveStatus = recv(connectedSocket, messageBuffer, sizeof(messageBuffer), 0);
 	return receiveStatus;
@@ -95,6 +94,10 @@ int setErrorState(int errorState)
 
 		case SOCKET_RECEIVE_ERROR:
 			perror("[ERROR]: Could not receive message");
+			break;
+
+		case SOCKET_HOST_ERROR:
+			perror("[ERROR]: Could get host by address");
 			break;
 
 		default:
