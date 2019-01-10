@@ -21,13 +21,14 @@
 */
 int start_server()
 {
-
+	int tcpArray[2] = { {SOCK_STREAM},{IPPROTO_TCP} };
+	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
 	//Spawn two threads. One for TCP, one for UDP
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
-	int tcpOrUdp[2] = { {SOCK_STREAM},{IPPROTO_TCP} };
-	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpOrUdp, 0, NULL);
-	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
+
+	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpArray, 0, NULL);
+	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
 
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
 	Sleep(1000000);
@@ -38,12 +39,12 @@ int start_server()
 
 #elif defined __linux__
 	pthread_t thread_linux_server[2];
-	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)IPPROTO_TCP) != 0)
+	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)tcpArray) != 0)
 	{
 		// An error has occurred
 		perror("Could not create Thread.");
 	}
-	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)IPPROTO_UDP) != 0)
+	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)udpArray) != 0)
 	{
 		// An error has occurred
 		perror("Could not create Thread.");
@@ -152,9 +153,15 @@ int start_server_protocol(int* tcpOrUdp)
 				else
 				{
 					//Stage 6: Receive the clients reply
-
-					networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
-
+					do
+					{
+						networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
+						char tempChar = "";
+						
+						// if a char is sent from the server, you know to break the cycle.
+						if (sscanf(tempChar, "%c", messageBuffer) == 1)
+							break;
+					} while (!networkResult);
 				}
 			}
 		}
