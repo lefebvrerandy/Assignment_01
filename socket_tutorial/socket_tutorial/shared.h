@@ -5,7 +5,11 @@
 *  FIRST VERSION : 2019-01-08
 *  DESCRIPTION   : This file contains the definitions, prototypes, and global constants used throughout the entirety of the application.
 */
+#pragma once
 
+//Disable warnings of things that may be considered unsafe if not watched properly 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#pragma warning(disable: 4996)
 
 //Standard C headers
 #include <string.h>
@@ -17,6 +21,7 @@
 //OS Dependent Headers
 #if defined _WIN32
 #include <winsock2.h>		//Windows socket operations
+#include <WS2tcpip.h>
 #include <windows.h>		//Windows API for 32/64 bit application
 #elif defined __linux__	
 #include <unistd.h>			//UNIX POSIX operating system API
@@ -40,8 +45,6 @@ typedef int SOCKET;
 
 
 //Defined application constants
-#pragma once
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define MESSAGE_BUFFER_SIZE			1000
 #define SWITCH_OPTIONS				5
 #define MAX_ARGUMENT_LENGTH			15

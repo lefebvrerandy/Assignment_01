@@ -7,6 +7,7 @@
 */
 
 #include "shared.h"
+#pragma comment (lib, "ws2_32.lib")
 
 //Function prototypes
 int validateAddress(char string[]);

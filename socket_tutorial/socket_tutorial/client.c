@@ -9,9 +9,7 @@
 */
 
 
-#include "shared.h"
 #include "client.h"
-#include "server.h"
 
 
 /*
@@ -56,10 +54,17 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	//Stage 1B : Setup the client's address struct
 	socketAddress.sin_family = AF_INET;										//Set the address family
-	inet_aton(storedData[CLA_IP_ADDRESS], &socketAddress.sin_addr.s_addr);	//Set the IP address
+
+
+	// TESTING
+	socketAddress.sin_addr.s_addr = inet_addr(storedData[1]);
+	//inet_aton(storedData[CLA_IP_ADDRESS], &socketAddress.sin_addr.s_addr);	//Set the IP address
+	// TESTING END
+
 	socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);			//Set the port
 	
 
+	clientReturn = 1;
 
 	//Host data has been retried and set, proceed to open the socket and run the message loop
 	if (clientReturn != ERROR)
@@ -86,13 +91,13 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 				int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);	//Provided at runtime by CLA
 
 
-				char messageBuffer[] = 0;
+				char messageBuffer[] = {""};
 				memset((void*)messageBuffer, 0, sizeof(messageBuffer));					//Prepare the outboundMessages for transmission
 				clock_t startTime = stopWatch();
 
 
 				int currentblockCount = 0;
-				while (currentblockCount < storedData[CLA_NUMBER_OF_BLOCKS])
+				while (currentblockCount < numberOfBlocks)
 				{
 					fillMessageBuffer(messageBuffer, MESSAGE_BUFFER_SIZE);				//Fill a single block with chars 0 - 9
 					sendStatus = sendMessage(openSocketHandle, messageBuffer);			//Send the message

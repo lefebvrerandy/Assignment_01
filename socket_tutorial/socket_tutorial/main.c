@@ -18,10 +18,8 @@
 
 
 //Standard C headers
-#include "client.h"
-#include "server.h"
 #include "shared.h"
-#pragma warning(disable: 4996)
+
 
 
 /*
@@ -47,6 +45,7 @@ int proc_arguments(int argumentCount, char* args[])
 		return 1;
     }
 
+
 	// If 10 arguments, must mean to start client.
 	else if (argumentCount == 10)
 	{
@@ -58,6 +57,12 @@ int proc_arguments(int argumentCount, char* args[])
 				0			1	 2		3	 4	 5		 6		   7	 8			9
 		./ispeed	-TCP/-UDP	-a ADDRESS	-p PORT		-s BLOCK_SIZE	-n NUM_BLOCKS
 		*/
+
+		/// Print all arguments to screen
+		//for (int i = 0; i < 10; i++)
+		//{
+		//	printf("%d = %s\n",(i+1), args[i]);
+		//}
 
 		// Check the Type of Connection
 		if (strcmp(args[1], "-TCP") == 0)
@@ -73,7 +78,7 @@ int proc_arguments(int argumentCount, char* args[])
 			// If the expected is found, store the data into the 2d array called "StoredData" 
 			if (strcmp(args[i], expectedSwitch[j]) == 0)
 			{
-				strcpy(storedData[j], args[i + 1]);
+				strcpy(storedData[j], args[i - 1]);
 
 				int res = 0;
 				switch (j)
@@ -114,6 +119,8 @@ int proc_arguments(int argumentCount, char* args[])
 	{
 		
 	}
+
+
 
 	if (strcmp(storedData[0], "-TCP") == 0)
 	{

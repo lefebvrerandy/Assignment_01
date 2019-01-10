@@ -9,8 +9,6 @@
 */
 
 
-#include "shared.h"
-#include "client.h"
 #include "server.h"
 
 
@@ -28,9 +26,11 @@ int start_server()
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
 	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_TCP, 0, NULL);
-	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
+	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
 
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
+
+	Sleep(1000000);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -83,7 +83,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	//Stage 1: Create local socket
 	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
-	if (openSocketHandle == INVALID_SOCKET)
+	if (openSocketHandle == -1)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
 	}
@@ -102,6 +102,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 		//Print server connection info to the screen		//DEBUG NEEDS TESTING
 		char hostbuffer[256];
+		char messageBuffer[256] = {""};
 		char *IPbuffer;
 		struct hostent *host_entry;
 		int hostname;
@@ -153,7 +154,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 				{
 					//Stage 6: Receive the clients reply
 
-					networkResult = receiveMessage(acceptedSocketConnection, );
+					networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
 
 				}
 			}
