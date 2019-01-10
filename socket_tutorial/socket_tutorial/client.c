@@ -31,24 +31,24 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	//Stage 1A: Get the client's network properties 
 	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
-	socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//Convert the IPv4 internet host address name to binary
-	if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//Check if the internet address field is valid (INADDR_NONE = error state of internet address) 
-	{
+	//socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//Convert the IPv4 internet host address name to binary
+	//if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//Check if the internet address field is valid (INADDR_NONE = error state of internet address) 
+	//{
 
-		hostIdentifier = gethostbyname(clientHostID);				//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
-		if (hostIdentifier == NULL)
-		{
-			clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
-		}
-	}
-	else
-	{
-		hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);	//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
-		if (hostIdentifier == NULL)
-		{
-			clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
-		}
-	}
+	//	hostIdentifier = gethostbyname(clientHostID);				//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
+	//	if (hostIdentifier == NULL)
+	//	{
+	//		clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
+	//	}
+	//}
+	//else
+	//{
+	//	hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);	//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
+	//	if (hostIdentifier == NULL)
+	//	{
+	//		clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
+	//	}
+	//}
 
 
 
@@ -64,7 +64,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);				//Set the port
 	
 
-	clientReturn = 1;
+	//clientReturn = 1;
 
 	//Host data has been retried and set, proceed to open the socket and run the message loop
 	if (clientReturn != ERROR)

@@ -21,17 +21,17 @@
 */
 int start_server()
 {
-
+	int tcpArray[2] = { {SOCK_STREAM},{IPPROTO_TCP} };
+	int udpArray[2] = { {SOCK_DGRAM}, {IPPROTO_UDP} };
 	//Spawn two threads. One for TCP, one for UDP
 #if defined _WIN32
 	HANDLE thread_windows_server[2];
-	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_TCP, 0, NULL);
-	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)IPPROTO_UDP, 0, NULL);
+
+	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpArray, 0, NULL);
+	//thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
 
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
-
 	Sleep(1000000);
-
 	for (int i = 0; i < 2; i++)
 	{
 		CloseHandle(thread_windows_server[i]);
@@ -39,12 +39,12 @@ int start_server()
 
 #elif defined __linux__
 	pthread_t thread_linux_server[2];
-	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)IPPROTO_TCP) != 0)
+	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)tcpArray) != 0)
 	{
 		// An error has occurred
 		perror("Could not create Thread.");
 	}
-	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)IPPROTO_UDP) != 0)
+	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)udpArray) != 0)
 	{
 		// An error has occurred
 		perror("Could not create Thread.");
@@ -74,7 +74,7 @@ int start_server()
 *	int tcp_or_udp		   : Denotes if the protocol is IPPROTO_TCP or IPPROTO_UDO
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
-int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
+int start_server_protocol(int* tcpOrUdp)
 {
 	int networkResult = 1;				//Denotes the success or failure of the servers operation
 	SOCKET acceptedSocketConnection;	//Socket used for connecting to the clients
@@ -82,8 +82,8 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 1: Create local socket
-	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
-	if (openSocketHandle == INVALID_SOCKET)
+	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
+	if (openSocketHandle == -1)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
 	}
@@ -107,7 +107,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		int hostname;
 
 		char hostPort[10];
-		strcpy(hostPort, socketAddress.sin_port);
+		strcpy(hostPort, storedData[CLA_PORT_NUMBER]);
 
 		hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 		host_entry = gethostbyname(hostbuffer);
@@ -152,9 +152,15 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 				else
 				{
 					//Stage 6: Receive the clients reply
-
-					networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
-
+					do
+					{
+						networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
+						char tempChar = "";
+						
+						// if a char is sent from the server, you know to break the cycle.
+						if (sscanf(tempChar, "%c", messageBuffer) == 1)
+							break;
+					} while (!networkResult);
 				}
 			}
 		}

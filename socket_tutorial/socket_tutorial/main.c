@@ -72,13 +72,12 @@ int proc_arguments(int argumentCount, char* args[])
 
 		// Iterate through the arguments starting at 2 and iterating by 2 each time through the loop
 		int j = 0;
-		for (int i = 2; i < 9; i++)
+		for (int i = 2; i < 10; i++)
 		{
-
 			// If the expected is found, store the data into the 2d array called "StoredData" 
 			if (strcmp(args[i], expectedSwitch[j]) == 0)
 			{
-				strcpy(storedData[j], args[i - 1]);
+				strcpy(storedData[j+1], args[i + 1]);
 
 				int res = 0;
 				switch (j)
