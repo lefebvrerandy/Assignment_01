@@ -32,15 +32,15 @@
 */
 int proc_arguments(int argumentCount, char* args[])
 {
-	char expectedSwitch[4][15] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
+	char expectedSwitch[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
-    // only two argument besides the actual command allowed
+    // Only two argument besides the actual command allowed
     if(argumentCount == 3) 
 	{
 		if (strcmp(args[1], "-p") == 0)
 		{
-			strcpy(storedData[2], args[2]);
+			strcpy(storedData[CLA_PORT_NUMBER], args[CLA_PORT_NUMBER]);		//CLA_PORT_NUMBER is set as 2 in accordance with storedData's declaration in shared.h
 		}
 		return 1;
     }
@@ -122,13 +122,13 @@ int proc_arguments(int argumentCount, char* args[])
 
 
 
-	if (strcmp(storedData[0], "-TCP") == 0)
+	if (strcmp(storedData[CLA_SOCKET_TYPE], "-TCP") == 0)			//CLA_SOCKET_TYPE is set to 0, in accordance with storedData's declaration in shared.h
 	{
-		return 2;
+		return 2;	//DEBUG NEED TO CHANGE FROM MAGIC NUMBER
 	}
-	else if (strcmp(storedData[0], "-UDP") == 0)
+	else if (strcmp(storedData[CLA_SOCKET_TYPE], "-UDP") == 0)
 	{
-		return 3;
+		return 3;	//DEBUG NEED TO CHANGE FROM MAGIC NUMBER
 	}
     return 0;
 }
@@ -140,14 +140,49 @@ int proc_arguments(int argumentCount, char* args[])
 *  PARAMETERS    : DEBUG
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validateAddress(char string[])
+int validateAddress(char address[])
 {
-	int res = 0;
-	// Check the address string to make sure its an address.
-	// If there is an error, return 1;
+	int addressValid = -1;
 
 
-	return res;
+	//Check if the address in the form of IPv4.
+	int errorCount = 0;
+	int IPaddressLength = strlen(address);
+	if (IPaddressLength == 32)											//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
+	{
+		int index = 0;
+		for (index = 0; index < IPaddressLength; index++)	
+		{
+			if (index == (3 || 7 || 11))								//DEBUG might need to rewrite the statement to check for each value individually
+			{
+				if (address[index] != '.')
+				{
+					errorCount++;
+				}
+			}
+			else
+			{
+				if (!((address[index] >= '0') && (address[index] <= '9')))	//Check if the character is a digit of 0 - 9
+				{
+					errorCount++;
+				}
+			}
+		}
+
+		if (errorCount > 0)
+		{
+			addressValid = -1;		//Errors detected, address was not valid
+		}
+
+		else
+		{
+			addressValid = 1;		//No errors, address is valid
+		}
+	}
+
+
+
+	return addressValid;
 }
 
 
@@ -161,7 +196,7 @@ int validatePort(char string[])
 {
 	int res = 0;
 	// Check the port string to make sure its a port.
-	// If there is an error, return 1;
+	// If there is an error, return -1;
 
 	return res;
 }
@@ -177,7 +212,7 @@ int validateBlockSize(char string[])
 {
 	int res = 0;
 	// Check the block size string to make sure its a valid size.
-	// If there is an error, return 1;
+	// If there is an error, return -1;
 
 	return res;
 }
@@ -193,7 +228,7 @@ int validateNumOfBlocks(char string[])
 {
 	int res = 0;
 	// Check the number of blocks string to make sure its a valid size.
-	// If there is an error, return 1;
+	// If there is an error, return -1;
 
 	return res;
 }

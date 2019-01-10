@@ -83,7 +83,7 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	//Stage 1: Create local socket
 	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
-	if (openSocketHandle == -1)
+	if (openSocketHandle == INVALID_SOCKET)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
 	}
@@ -92,7 +92,6 @@ int start_server_protocol(int stream_or_datagram, int tcp_or_udp)
 		struct sockaddr_in socketAddress;
 		memset((void*)&socketAddress, 0, sizeof(socketAddress));				//Clear the address struct for initialization
 		
-
 
 		//Stage 2A: Initialize the socket struct
 		socketAddress.sin_family = AF_INET;										//Address family internet protocol

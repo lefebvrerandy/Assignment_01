@@ -7,9 +7,11 @@
 */
 #pragma once
 
+
 //Disable warnings of things that may be considered unsafe if not watched properly 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma warning(disable: 4996)
+
 
 //Standard C headers
 #include <string.h>
@@ -46,8 +48,8 @@ typedef int SOCKET;
 
 //Defined application constants
 #define MESSAGE_BUFFER_SIZE			1000
-#define SWITCH_OPTIONS				5
 #define MAX_ARGUMENT_LENGTH			15
+#define SWITCH_OPTIONS				5
 #define ERROR						-1
 
 

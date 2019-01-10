@@ -53,7 +53,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 1B : Setup the client's address struct
-	socketAddress.sin_family = AF_INET;										//Set the address family
+	socketAddress.sin_family = AF_INET;											//Set the address family
 
 
 	// TESTING
@@ -61,7 +61,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	//inet_aton(storedData[CLA_IP_ADDRESS], &socketAddress.sin_addr.s_addr);	//Set the IP address
 	// TESTING END
 
-	socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);			//Set the port
+	socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);				//Set the port
 	
 
 	clientReturn = 1;
@@ -93,13 +93,13 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 				char messageBuffer[] = {""};
 				memset((void*)messageBuffer, 0, sizeof(messageBuffer));					//Prepare the outboundMessages for transmission
+				fillMessageBuffer(messageBuffer, MESSAGE_BUFFER_SIZE);					//Fill a single block with chars 0 - 9
+				
+				
 				clock_t startTime = stopWatch();
-
-
 				int currentblockCount = 0;
 				while (currentblockCount < numberOfBlocks)
 				{
-					fillMessageBuffer(messageBuffer, MESSAGE_BUFFER_SIZE);				//Fill a single block with chars 0 - 9
 					sendStatus = sendMessage(openSocketHandle, messageBuffer);			//Send the message
 				}
 				clock_t endTime = stopWatch();
