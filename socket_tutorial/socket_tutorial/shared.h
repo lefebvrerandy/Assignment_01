@@ -47,7 +47,10 @@ typedef int SOCKET;
 
 
 //Defined application constants
-#define MESSAGE_BUFFER_SIZE			1000
+#define MESSAGE_BUFFER_SIZE_10000	10000
+#define MESSAGE_BUFFER_SIZE_5000	5000
+#define MESSAGE_BUFFER_SIZE_2000	2000
+#define MESSAGE_BUFFER_SIZE_1000	1000
 #define MAX_ARGUMENT_LENGTH			15
 #define SWITCH_OPTIONS				5
 #define ERROR						-1

@@ -86,29 +86,106 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 			}
 			else
 			{
+
+				//Four possible block sizes are available for use
+				char messageBuffer1000[MESSAGE_BUFFER_SIZE_1000] = {""};
+				char messageBuffer2000[MESSAGE_BUFFER_SIZE_2000] = {""};
+				char messageBuffer5000[MESSAGE_BUFFER_SIZE_5000] = {""};
+				char messageBuffer10000[MESSAGE_BUFFER_SIZE_10000] = {""};
+
+
+
+				clock_t startTime;
+				clock_t endTime;
+				double elapsedTime = 0;
 				int sendStatus = 0;
-				int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);				//Provided at runtime by CLA
-				int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);	//Provided at runtime by CLA
-
-
-				char messageBuffer[] = {""};
-				memset((void*)messageBuffer, 0, sizeof(messageBuffer));					//Prepare the outboundMessages for transmission
-				fillMessageBuffer(messageBuffer, MESSAGE_BUFFER_SIZE);					//Fill a single block with chars 0 - 9
-				
-				
-				clock_t startTime = stopWatch();
 				int currentblockCount = 0;
-				while (currentblockCount < numberOfBlocks)
+
+				//Convert the command line arguments and send the corresponding  block size and frequency
+				int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
+				int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
+				switch (blockSize)
 				{
-					sendStatus = sendMessage(openSocketHandle, messageBuffer);			//Send the message
+					case MESSAGE_BUFFER_SIZE_1000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer1000, 0, sizeof(messageBuffer1000));
+						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000);		
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = stopWatch();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer1000);
+						}
+						endTime = stopWatch();
+						elapsedTime = calculateElapsedTime(startTime, endTime);
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_2000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer2000, 0, sizeof(messageBuffer2000));
+						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = stopWatch();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer2000);
+						}
+						endTime = stopWatch();
+						elapsedTime = calculateElapsedTime(startTime, endTime);
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_5000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer5000, 0, sizeof(messageBuffer5000));
+						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = stopWatch();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer5000);
+						}
+						endTime = stopWatch();
+						elapsedTime = calculateElapsedTime(startTime, endTime);
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_10000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer10000, 0, sizeof(messageBuffer10000));
+						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = stopWatch();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer10000);
+						}
+						endTime = stopWatch();
+						elapsedTime = calculateElapsedTime(startTime, endTime);
+						break;
+
+
+					default:
+						break;
 				}
-				clock_t endTime = stopWatch();
-				double elapsedTime = calculateElapsedTime(startTime, endTime);
 
 
-
-				char recievedBuffer[MESSAGE_BUFFER_SIZE] = "";
-				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));				//Prepare the inboundBuffer to store the servers reply
+				//
+				char recievedBuffer[MESSAGE_BUFFER_SIZE_1000] = "";
+				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));
 				
 				
 				
