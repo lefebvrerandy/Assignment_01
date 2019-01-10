@@ -94,12 +94,12 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 				char messageBuffer10000[MESSAGE_BUFFER_SIZE_10000] = {""};
 
 
-
 				clock_t startTime;
 				clock_t endTime;
 				double elapsedTime = 0;
 				int sendStatus = 0;
 				int currentblockCount = 0;
+
 
 				//Convert the command line arguments and send the corresponding  block size and frequency
 				int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
@@ -183,24 +183,26 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 				}
 
 
-				//
+				//Prepare the buffer for incoming messages from the server
 				char recievedBuffer[MESSAGE_BUFFER_SIZE_1000] = "";
 				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));
 				
 				
-				
-				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);		//Receive the first message from the server with the proportion of missed data
-				int proportionMissing = convertCharToInt(recievedBuffer);				//Convert the string to an int
-				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);		//Receive the second message from the server with the proportion of disordered data
-				int disordered = convertCharToInt(recievedBuffer);						//Convert the string to an int
+				//Receive the messages informing the client about the missed, and disordered data from the last transmission
+				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);
+				int proportionMissing = convertCharToInt(recievedBuffer);
+				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));
 
 
+				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);
+				int disordered = convertCharToInt(recievedBuffer);
 
-				int totalBytes = calculateTotalBytesSent(storedData[CLA_BUFFER_SIZE], storedData[CLA_NUMBER_OF_BLOCKS]);	//Block size * number of blocks
+
+				int totalBytes = blockSize * numberOfBlocks;
+				int megaBitsPerSecond = calculateSpeed(totalBytes, (int)elapsedTime);
 
 
-
-				printResults(blockSize, totalBytes, (int)elapsedTime, (totalBytes / (int)elapsedTime), proportionMissing, disordered);
+				printResults(blockSize, numberOfBlocks, (int)elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
 			}
 		}
 		closesocket(openSocketHandle);
@@ -234,18 +236,18 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 */
 void fillMessageBuffer(char messageBuffer[], int bufferSize)
 {
-	int index, elementValue;
-	index = elementValue = 0;
+	int index = 0;
+	int elementValue = 48;							//ASCII 48 is '0'
 	for (index = 0; index < bufferSize; index++)	//Message buffer size can increase from 1000 - 10,000 bytes
 	{
-		if (elementValue < 10)
+		if (elementValue < 58)
 		{
-			messageBuffer[index] = elementValue;	//Fill the message buffer with the elements value from 0 - 9
+			messageBuffer[index] = (char)elementValue;	//Fill the message buffer with the elements value from 0 - 9
 			elementValue++;
 		}
 		else
 		{
-			elementValue = 0;						//Reset the value once passed a value of 9
+			elementValue = 48;						//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
 
@@ -289,9 +291,9 @@ double calculateElapsedTime(clock_t startTime, clock_t endTime)
 
 /*
 *  FUNCTION      : convertCharToInt
-*  DESCRIPTION   : This function is used to DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : int : Returns DEBUG
+*  DESCRIPTION   : This function is used to convert characters to an integer
+*  PARAMETERS    : char* stringToConvert : The character string that will be converted to its integer counterpart
+*  RETURNS       : int : Returns the converted number from the character array
 */
 int convertCharToInt(char* stringToConvert)
 {
@@ -303,24 +305,23 @@ int convertCharToInt(char* stringToConvert)
 
 
 /*
-*  FUNCTION      : calculateTotalBytesSent
-*  DESCRIPTION   : This function is used to DEBUG
-*  PARAMETERS    : DEBUG
-*  RETURNS       : DEBUG
+*  FUNCTION      : calculateSpeed
+*  DESCRIPTION   : This function is used to calculate the speed to transmission between the client and the server, by converting it into megabits per second
+*  PARAMETERS    : parameters are as follows, 
+*	int bytes		  : Total number of bytes sent to the server
+*	int elapsedTimeMS : Total elapsed time (ms) needed to send all the bytes to the server
+*  RETURNS       : int : Returns the speed of transmission as megabits / second
 */
-int calculateTotalBytesSent(char blocksize[], char numberOfBlocks[])
+int calculateSpeed(int bytes, int elapsedTimeMS)
 {
-	int byteSent = 0;
+	int speed = 0;
 
+	//Speed is calculated as (megabytes / sec) * 8 (ie. megabits)
+	speed = ((bytes * 1024) / elapsedTimeMS) * 8;
 
-	//Extract the integer values of the block size, and number of blocks
-	int integerBlockSize = convertCharToInt(blocksize);
-	int integerBumberOfBlocks = convertCharToInt(numberOfBlocks);
-	byteSent = integerBlockSize * integerBumberOfBlocks;
+	return speed;
 
-
-	return byteSent;
-}//Done
+}//DOne
 
 
 /*
