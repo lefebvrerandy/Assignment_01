@@ -135,8 +135,9 @@ int proc_arguments(int argumentCount, char* args[])
 
 /*
 *  FUNCTION      : validateAddress
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to check if the IP address supplied from the command line, is valid according to the
+*					standards set by IPv4 (ie. its a 32-bit number of form DDD.DDD.DDD.DDD)
+*  PARAMETERS    : char address[] : String containing the IP address
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int validateAddress(char address[])
@@ -182,7 +183,8 @@ int validateAddress(char address[])
 
 
 	return addressValid;
-}
+
+}//Done 
 
 
 /*
@@ -203,18 +205,31 @@ int validatePort(char string[])
 
 /*
 *  FUNCTION      : validateBlockSize
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to check if the block size is valid
+*  PARAMETERS    : char blockSizeString[] : String containing the block size
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validateBlockSize(char string[])
+int validateBlockSize(char blockSizeString[])
 {
-	int res = 0;
-	// Check the block size string to make sure its a valid size.
-	// If there is an error, return -1;
+	int blockSizeValid = 0;
+	int blockSize = convertCharToInt(blockSizeString);
+	switch (blockSize)
+	{
+		case MESSAGE_BUFFER_SIZE_1000:
+		case MESSAGE_BUFFER_SIZE_2000:
+		case MESSAGE_BUFFER_SIZE_5000:
+		case MESSAGE_BUFFER_SIZE_10000:
+			blockSizeValid = 1;				//Valid block size
+			break;
 
-	return res;
-}
+		default:
+			blockSizeValid = -1;			//Invalid block size
+			break;
+	}
+
+	return blockSizeValid;
+
+}//Done
 
 
 /*

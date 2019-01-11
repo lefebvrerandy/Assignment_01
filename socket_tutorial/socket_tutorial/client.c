@@ -94,8 +94,8 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 				char messageBuffer10000[MESSAGE_BUFFER_SIZE_10000] = {""};
 
 
-				clock_t startTime;
-				clock_t endTime;
+				long startTime;
+				long endTime;
 				double elapsedTime = 0;
 				int sendStatus = 0;
 				int currentblockCount = 0;
@@ -256,34 +256,47 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize)
 
 /*
 *  FUNCTION      : stopWatch
-*  DESCRIPTION   : This function is used to get the number of clock ticks since the process started. It returns the tick count
-*				   and is used in conjunction with calculateElapsedTime() to calculate the total time required for an operation to complete
+*  DESCRIPTION   : This function is used to get the number of milliseconds since the Epoch  (Jan 1, 1970)
 *  PARAMETERS    : void: The function takes no arguments
-*  RETURNS       : clock_t : Returns the number of clock ticks since the process was started
+*  RETURNS       : long : Returns the current microsecond count
 *
-*	NOTE: This function  was initially found online, however, the original source code has since been modified to suit the projects needs.
-*		   As a result, partial credit belongs to the original authors on the website. For more information, please see the reference,
-*		   GeeksForGeeks.(ND). How to measure time taken by a function in C?. Retrieved on January 8, 2019,
-*			from https://www.geeksforgeeks.org/how-to-measure-time-taken-by-a-program-in-c/
+*	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs. 
+*		   As a result, credit belongs to the original author on the website. For more information, please see the reference,
+*		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019,
+*			from https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
 */
-clock_t stopWatch(void)
+long stopWatch(void)
 {
-	clock_t clockTime = clock();
-	return clockTime;
+	//struct contains the following fields:
+	/*
+		struct timeval {
+			time_t      tv_sec;     //seconds
+			suseconds_t tv_usec;    //microseconds
+		};
+	*/
+
+
+	struct timeval time;
+	if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
+	{
+		return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
+	}
+	return ERROR;
 
 }//Done
 
 
 /*
 *  FUNCTION      : calculateElapsedTime
-*  DESCRIPTION   : This function is used to calculate the elapsed time for message transimssion between the networked clients and server
+*  DESCRIPTION   : This function is used to calculate the elapsed time for message transmission between the networked clients and server
 *  PARAMETERS    : clock_t startTime : Start time for when the transmission began
 *				   clock_t endTime	 : End time for when the transmission had finished
-*  RETURNS       : double : Returns the elepased time between the two clock_t values
+*  RETURNS       : double : Returns the elapsedTime time between the two clock_t values
 */
-double calculateElapsedTime(clock_t startTime, clock_t endTime)
+double calculateElapsedTime(long startTime, long endTime)
 {
-	double elapsedTime = ((double)(endTime - startTime)) / CLOCKS_PER_SEC;
+
+	double elapsedTime = (double)(endTime - startTime);
 	return elapsedTime;
 
 }//Done
