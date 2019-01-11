@@ -153,14 +153,76 @@ int start_server_protocol(int* tcpOrUdp)
 				else
 				{
 					memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+					int bytesReceived, lostBytes = 0;
+					// Set up parsing to understand the message
+					char bytesInHex[5] = { "" };
+					char numberOfTimesChar[10000] = {""};
+					char tempMessage[10000] = { "" };
+					char *ptr = NULL;
 					//Stage 6: Receive the clients reply
 					do
 					{
-						networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
-						char tempChar = "";
+						bytesReceived = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+//Giving Issues			//networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
 						
+						// ////////////////////////////////////
+						// 
+						//	De-construct the message
+						//
+						// ////////////////////////////////////
+
+						// Take the first 4 characters and stored into bytesInHex
+						strcpy(tempMessage, messageBuffer);
+						for (int i = 0; i < 4; i++)
+						{
+							bytesInHex[i] = tempMessage[i];
+						}
+
+						// Convert Hex to decimal
+						int val = 0;
+						long expectingBytes = 0;		// Will contain the total size incoming
+						int len = 0;
+						len = strlen(bytesInHex);
+						len--;
+						for (int i = 0; i < 4; i++)
+						{
+							if (bytesInHex[i] >= '0' && bytesInHex[i] <= '9')
+							{
+								val = bytesInHex[i] - 48;
+							}
+							else if (bytesInHex[i] >= 'a' && bytesInHex[i] <= 'f')
+							{
+								val = bytesInHex[i] - 97 + 10;
+							}
+							else if (bytesInHex[i] >= 'A' && bytesInHex[i] <= 'F')
+							{
+								val = bytesInHex[i] - 65 + 10;
+							}
+
+							expectingBytes += val * pow(16, len);
+							len--;
+						}
+
+						if (bytesReceived != expectingBytes)
+						{
+							lostBytes = expectingBytes - bytesReceived;
+						}
+
+
+
+
+						// Find where the real message starts
+						ptr = strchr(tempMessage, 'G');
+						ptr++;
+						strcpy(tempMessage, ptr);
+						
+						// Find how many messages should be coming in
+
+
+						// Compare bytes received to what was expected
+
 						printf("%s\n\n", messageBuffer);
-					} while (!networkResult);
+					} while (1);
 				}
 			}
 		}
