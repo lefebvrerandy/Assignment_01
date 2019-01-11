@@ -166,8 +166,11 @@ int start_server_protocol(int* tcpOrUdp)
 					//Stage 6: Receive the clients reply
 					do
 					{
-						bytesReceived = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+						recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
 //Giving Issues			//networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
+
+						bytesReceived = strlen(messageBuffer);
+						amountOfTimesReceived++;
 						
 						// ////////////////////////////////////
 						// 
@@ -185,6 +188,7 @@ int start_server_protocol(int* tcpOrUdp)
 						// Convert Hex to decimal
 						int val = 0;
 						int len = 0;
+						expectingBytes = 0;
 						len = strlen(bytesInHex);
 						len--;
 						for (int i = 0; i < 4; i++)
@@ -230,14 +234,16 @@ int start_server_protocol(int* tcpOrUdp)
 						{
 							stopLooking = true;
 						}
-
-						amountOfTimesReceived++;
-
-						printf("%s\n\n", messageBuffer);
 					} while (stopLooking == false);
 
-					printf("Amount of Bytes Received: %d\n", bytesReceived * amountOfTimesReceived);
-					printf("Amount of Bytes Send: %d\n", expectingBytes * numberOfTimesInt);
+					int totalReceivedBytes = bytesReceived * amountOfTimesReceived;
+					int totalExpectingReceivedBytes = expectingBytes * numberOfTimesInt;
+					int totalLostBytes = totalExpectingReceivedBytes - totalReceivedBytes;
+					printf("Amount of Bytes Received: %d\n", totalReceivedBytes);
+					printf("Amount of Bytes Sent From Client: %d\n", totalExpectingReceivedBytes);
+					printf("Amount of Lost Bytes: %d\n", totalLostBytes);
+					printf("\n");
+					printf("Sending this to client....");
 					printf("\n");
 					printf("\n");
 				}

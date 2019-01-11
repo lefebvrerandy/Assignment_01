@@ -118,6 +118,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 						while (currentblockCount < numberOfBlocks)
 						{
 							sendStatus = sendMessage(openSocketHandle, messageBuffer1000);
+							currentblockCount++;
 						}
 						endTime = stopWatch();
 						elapsedTime = calculateElapsedTime(startTime, endTime);
@@ -136,6 +137,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 						while (currentblockCount < numberOfBlocks)
 						{
 							sendStatus = sendMessage(openSocketHandle, messageBuffer2000);
+							currentblockCount++;
 						}
 						endTime = stopWatch();
 						elapsedTime = calculateElapsedTime(startTime, endTime);
@@ -154,6 +156,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 						while (currentblockCount < numberOfBlocks)
 						{
 							sendStatus = sendMessage(openSocketHandle, messageBuffer5000);
+							currentblockCount++;
 						}
 						endTime = stopWatch();
 						elapsedTime = calculateElapsedTime(startTime, endTime);
@@ -172,6 +175,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 						while (currentblockCount < numberOfBlocks)
 						{
 							sendStatus = sendMessage(openSocketHandle, messageBuffer10000);
+							currentblockCount++;
 						}
 						endTime = stopWatch();
 						elapsedTime = calculateElapsedTime(startTime, endTime);
