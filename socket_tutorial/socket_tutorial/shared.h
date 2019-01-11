@@ -16,6 +16,7 @@
 //Standard C headers
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
