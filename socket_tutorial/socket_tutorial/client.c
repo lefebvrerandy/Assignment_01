@@ -110,7 +110,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
 						memset((void*)messageBuffer1000, 0, sizeof(messageBuffer1000));
-						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000);		
+						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000, storedData[4]);
 
 
 						//Start the timer, and send all the blocks across the network
@@ -128,7 +128,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
 						memset((void*)messageBuffer2000, 0, sizeof(messageBuffer2000));
-						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000);
+						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000, storedData[4]);
 
 
 						//Start the timer, and send all the blocks across the network
@@ -146,7 +146,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
 						memset((void*)messageBuffer5000, 0, sizeof(messageBuffer5000));
-						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000);
+						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000, storedData[4]);
 
 
 						//Start the timer, and send all the blocks across the network
@@ -164,7 +164,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
 						memset((void*)messageBuffer10000, 0, sizeof(messageBuffer10000));
-						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000);
+						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000, storedData[4]);
 
 
 						//Start the timer, and send all the blocks across the network
@@ -234,22 +234,84 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 *	int bufferSize		: Buffer size set outside of the function, and used to set the target loop count
 *  RETURNS       : void : The function has no return value
 */
-void fillMessageBuffer(char messageBuffer[], int bufferSize)
+void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 {
 	int index = 0;
 	int elementValue = 48;							//ASCII 48 is '0'
-	for (index = 0; index < bufferSize; index++)	//Message buffer size can increase from 1000 - 10,000 bytes
+	char tempStartingPoint[255] = { "" };
+
+	// Insert some data at the beginning of the message buffer so that the server knows what will all be sent
+	char sizeOfBuffInHex[4][4] = { {"03E8"},{"07D0"},{"1388"},{"2710"} };
+	int indexOfHexToInsert = 0;
+	const int hexLength = 4;	// This will be used to find out the total of characters already added
+	switch (bufferSize)
+	{
+	case 1000:
+		indexOfHexToInsert = 0;
+		break;
+	case 2000:
+		indexOfHexToInsert = 1;
+		break;
+	case 5000:
+		indexOfHexToInsert = 2;
+		break;
+	case 10000:
+		indexOfHexToInsert = 3;
+		break;
+	}
+
+	// //////////////////////////////////////////////////////////////////////////////
+	// 
+	// From here one out, we are going to fill the buffer one index at a time. 
+	// The start to each of the messages will contain 5 very important character,
+	//	possible alittle more:
+	//		The first 4 characters are a hexadecimal converting number that contains
+	//		the block size that will be sent.
+	//		The fifth character, and until the first "-" will be the amount of messages
+	//		that will be passed.
+	// An example would be :"03E810!"
+	//			This will be parsed on the server to read "03E8" = 1000 size and "10" = times
+	//
+	// //////////////////////////////////////////////////////////////////////////////
+
+	// Insert the Hex value for the buffer that is being sent to the server at the beginning of every message
+	int i = 0;
+	for (i = 0; i < 4; i++)
+	{
+		tempStartingPoint[i] = sizeOfBuffInHex[indexOfHexToInsert][i];
+	}
+
+	// Insert the number of messages that will be passed to the server
+	int lengthOfNumOfTimes = strlen(numOfTimes);
+	int indexOfTimes = 0;
+	int j = 4;
+	for (j = 4; j < lengthOfNumOfTimes + 4; j++)
+	{
+		tempStartingPoint[j] = numOfTimes[indexOfTimes];
+		indexOfTimes++;
+	}
+	
+	tempStartingPoint[j] = 'G';
+
+	// Finally.. Add the starting to the message buffer
+	strcpy(messageBuffer, tempStartingPoint);
+
+	int totalCharacterAlreadyAdded = hexLength + lengthOfNumOfTimes + 1; // Find out how many characters have already been added
+	for (index = totalCharacterAlreadyAdded; index < (bufferSize - totalCharacterAlreadyAdded); index++)	//Message buffer size can increase from 1,000 - 10,000 bytes
 	{
 		if (elementValue < 58)
 		{
 			messageBuffer[index] = (char)elementValue;	//Fill the message buffer with the elements value from 0 - 9
 			elementValue++;
 		}
-		else
+
+		if (elementValue == 58)
 		{
 			elementValue = 48;						//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
+
+	printf("%s\n", messageBuffer);
 
 }//Done
 
@@ -276,11 +338,11 @@ long stopWatch(void)
 	*/
 
 
-	struct timeval time;
-	if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
-	{
-		return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
-	}
+	//struct timeval time;
+	//if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
+	//{
+	//	return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
+	//}
 	return ERROR;
 
 }//Done

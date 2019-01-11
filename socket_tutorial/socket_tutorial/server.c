@@ -86,6 +86,7 @@ int start_server_protocol(int* tcpOrUdp)
 	if (openSocketHandle == -1)
 	{
 		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
+		return SOCKET_CREATION_ERROR;
 	}
 	else
 	{
@@ -101,7 +102,7 @@ int start_server_protocol(int* tcpOrUdp)
 
 		//Print server connection info to the screen		//DEBUG NEEDS TESTING
 		char hostbuffer[256];
-		char messageBuffer[256] = {""};
+		char messageBuffer[10000] = {""};
 		char *IPbuffer;
 		struct hostent *host_entry;
 		int hostname;
@@ -151,15 +152,14 @@ int start_server_protocol(int* tcpOrUdp)
 				}
 				else
 				{
+					memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 					//Stage 6: Receive the clients reply
 					do
 					{
 						networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
 						char tempChar = "";
 						
-						// if a char is sent from the server, you know to break the cycle.
-						if (sscanf(tempChar, "%c", messageBuffer) == 1)
-							break;
+						printf("%s\n\n", messageBuffer);
 					} while (!networkResult);
 				}
 			}
