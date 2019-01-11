@@ -269,7 +269,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 	//		the block size that will be sent.
 	//		The fifth character, and until the first "-" will be the amount of messages
 	//		that will be passed.
-	// An example would be :"03E810!"
+	// An example would be :"03E810G"
 	//			This will be parsed on the server to read "03E8" = 1000 size and "10" = times
 	//
 	// //////////////////////////////////////////////////////////////////////////////
@@ -297,7 +297,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 	strcpy(messageBuffer, tempStartingPoint);
 
 	int totalCharacterAlreadyAdded = hexLength + lengthOfNumOfTimes + 1; // Find out how many characters have already been added
-	for (index = totalCharacterAlreadyAdded; index < (bufferSize - totalCharacterAlreadyAdded); index++)	//Message buffer size can increase from 1,000 - 10,000 bytes
+	for (index = totalCharacterAlreadyAdded; index < bufferSize; index++)	//Message buffer size can increase from 1,000 - 10,000 bytes
 	{
 		if (elementValue < 58)
 		{
@@ -311,7 +311,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 		}
 	}
 
-	printf("%s\n", messageBuffer);
+	messageBuffer[index] = '\0';
 
 }//Done
 
