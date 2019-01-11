@@ -157,8 +157,12 @@ int start_server_protocol(int* tcpOrUdp)
 					// Set up parsing to understand the message
 					char bytesInHex[5] = { "" };
 					char numberOfTimesChar[10000] = {""};
+					int numberOfTimesInt = 0;
 					char tempMessage[10000] = { "" };
+					bool stopLooking = false;
 					char *ptr = NULL;
+					int amountOfTimesReceived = 0;
+					long expectingBytes = 0;		// Will contain the total size incoming
 					//Stage 6: Receive the clients reply
 					do
 					{
@@ -180,7 +184,6 @@ int start_server_protocol(int* tcpOrUdp)
 
 						// Convert Hex to decimal
 						int val = 0;
-						long expectingBytes = 0;		// Will contain the total size incoming
 						int len = 0;
 						len = strlen(bytesInHex);
 						len--;
@@ -203,26 +206,40 @@ int start_server_protocol(int* tcpOrUdp)
 							len--;
 						}
 
+						// Compare bytes received to what was expected
 						if (bytesReceived != expectingBytes)
 						{
-							lostBytes = expectingBytes - bytesReceived;
+							lostBytes += expectingBytes - bytesReceived;
 						}
 
-
-
+						// Find how many messages should be coming in
+						ptr = tempMessage;
+						ptr += 4;
+						for (int i = 0; ptr[i] != 'G'; i++)
+						{
+							numberOfTimesChar[i] = tempMessage[i+4];
+						}
+						numberOfTimesInt = atoi(numberOfTimesChar);
 
 						// Find where the real message starts
 						ptr = strchr(tempMessage, 'G');
 						ptr++;
 						strcpy(tempMessage, ptr);
 						
-						// Find how many messages should be coming in
+						if (amountOfTimesReceived == numberOfTimesInt)
+						{
+							stopLooking = true;
+						}
 
-
-						// Compare bytes received to what was expected
+						amountOfTimesReceived++;
 
 						printf("%s\n\n", messageBuffer);
-					} while (1);
+					} while (stopLooking == false);
+
+					printf("Amount of Bytes Received: %d\n", bytesReceived * amountOfTimesReceived);
+					printf("Amount of Bytes Send: %d\n", expectingBytes * numberOfTimesInt);
+					printf("\n");
+					printf("\n");
 				}
 			}
 		}
