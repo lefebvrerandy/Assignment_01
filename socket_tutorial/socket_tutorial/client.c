@@ -104,6 +104,94 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 				//Convert the command line arguments and send the corresponding  block size and frequency
 				int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
 				int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
+				
+
+				//Windows specific message transmission and time keeping
+				#if defined _WIN32
+				switch (blockSize)
+				{
+					case MESSAGE_BUFFER_SIZE_1000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer1000, 0, sizeof(messageBuffer1000));
+						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000, storedData[4]);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = GetTickCount();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer1000);
+							currentblockCount++;
+						}
+						endTime = GetTickCount();
+						elapsedTime = endTime - startTime;
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_2000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer2000, 0, sizeof(messageBuffer2000));
+						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000, storedData[4]);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = GetTickCount();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer2000);
+							currentblockCount++;
+						}
+						endTime = GetTickCount();
+						elapsedTime = endTime - startTime;
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_5000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer5000, 0, sizeof(messageBuffer5000));
+						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000, storedData[4]);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = GetTickCount();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer5000);
+							currentblockCount++;
+						}
+						endTime = GetTickCount();
+						elapsedTime = endTime - startTime;
+						break;
+
+
+					case MESSAGE_BUFFER_SIZE_10000:
+
+						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+						memset((void*)messageBuffer10000, 0, sizeof(messageBuffer10000));
+						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000, storedData[4]);
+
+
+						//Start the timer, and send all the blocks across the network
+						startTime = GetTickCount();
+						while (currentblockCount < numberOfBlocks)
+						{
+							sendStatus = sendMessage(openSocketHandle, messageBuffer10000);
+							currentblockCount++;
+						}
+						endTime = GetTickCount();
+						elapsedTime = endTime - startTime;
+						break;
+
+
+					default:
+						break;
+				}
+
+				#elif defined __linux__
+				//UNIX specific message transmission and time keeping
 				switch (blockSize)
 				{
 					case MESSAGE_BUFFER_SIZE_1000:
@@ -185,6 +273,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 					default:
 						break;
 				}
+				#endif
 
 
 				//Prepare the buffer for incoming messages from the server
@@ -250,18 +339,18 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 	const int hexLength = 4;	// This will be used to find out the total of characters already added
 	switch (bufferSize)
 	{
-	case 1000:
-		indexOfHexToInsert = 0;
-		break;
-	case 2000:
-		indexOfHexToInsert = 1;
-		break;
-	case 5000:
-		indexOfHexToInsert = 2;
-		break;
-	case 10000:
-		indexOfHexToInsert = 3;
-		break;
+		case 1000:
+			indexOfHexToInsert = 0;
+			break;
+		case 2000:
+			indexOfHexToInsert = 1;
+			break;
+		case 5000:
+			indexOfHexToInsert = 2;
+			break;
+		case 10000:
+			indexOfHexToInsert = 3;
+			break;
 	}
 
 	// //////////////////////////////////////////////////////////////////////////////
@@ -320,13 +409,15 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 }//Done
 
 
+//Prototypes OS specific
+#if defined __linux__
 /*
 *  FUNCTION      : stopWatch
 *  DESCRIPTION   : This function is used to get the number of milliseconds since the Epoch  (Jan 1, 1970)
 *  PARAMETERS    : void: The function takes no arguments
 *  RETURNS       : long : Returns the current microsecond count
 *
-*	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs. 
+*	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs.
 *		   As a result, credit belongs to the original author on the website. For more information, please see the reference,
 *		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019,
 *			from https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
@@ -366,6 +457,7 @@ double calculateElapsedTime(long startTime, long endTime)
 	return elapsedTime;
 
 }//Done
+#endif
 
 
 /*
