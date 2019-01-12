@@ -10,12 +10,19 @@
 #include "shared.h"
 
 
+//Timer structure
+typedef struct {
+	double startTime;
+	double endTime;
+	double elapsedTime;
+}Timer;
+
+
 //Function prototypes
 int start_client_protocol(int stream_or_datagram, int tcp_or_udp);
 int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress);
+char* CreateMessageBuffer(int bufferSize);
 void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[]);
-long stopWatch(void);
-double calculateElapsedTime(long startTime, long endTime);
-int convertCharToInt(char* stringToConvert);
+double stopWatch(void);
 int calculateSpeed(int bytes, int elapsedTimeMS);
 void printResults(int size, int sent, int time, int speed, int missing, int disordered);

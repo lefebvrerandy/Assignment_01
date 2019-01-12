@@ -12,8 +12,9 @@
 
 
 //Function prototypes
+int start_server();
 int start_server_protocol(int* tcpOrUdp);
 int validateAddress(char string[]);
-int validatePort(char string[]);
-int validateBlockSize(char string[]);
-int validateNumOfBlocks(char string[]);
+int validatePort(char* string);
+int validateBlockSize(char* string);
+int validateNumOfBlocks(char* string);

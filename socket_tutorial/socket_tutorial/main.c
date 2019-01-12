@@ -3,31 +3,59 @@
 *  PROJECT       : CNTR 2115 - Assignment #1
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
-*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for DEBUG
+*  DESCRIPTION   : This file contains main, and acts as the primary controller for the solution. Functions are included for 
+*				   examining the command line arguments, and directing the flow of the application. The program is used to measure the speed of message
+*				   transmission across TCP, and UDP sockets between the server and its clients. The program offers a hyper threaded ANSI C solution for 
+*				   the creating networked processes between windows and UNIX systems.
 *
 *  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
 
-//Prototypes OS specific
+#include "shared.h"
+#include "server.h"		//Needed for start_Server() prototype
+#include "client.h"		//Needed for clientProtocol() prototype
+
+
+int main(int argc, char* argv[])
+{
+    // startup WinSock in Windows
 #if defined _WIN32
-
-#elif defined __linux__
-
+    WSADATA wsa_data;
+    WSAStartup(MAKEWORD(1,1), &wsa_data);
 #endif
 
+    // process the command line arguments
+	// If 1 argument, must be start server. 
+	// If 5 arguments, must be start client.
+    switch(proc_arguments(argc, argv))
+    {
+    case 1:
+        start_server();
+        break;
+    case 2:
+        start_client_protocol(SOCK_STREAM, IPPROTO_TCP);	//TCP client
+        break;
+	case 3:
+		start_client_protocol(SOCK_DGRAM, IPPROTO_UDP);		//UDP client
+		break;
+    }
 
-//Standard C headers
-#include "shared.h"
+    // cleanup WinSock in Windows
+#if defined _WIN32
+    WSACleanup();
+#endif
 
-
+    return 0;
+}
 
 /*
 *  FUNCTION      : proc_arguments
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : Parameters are as follows, 
-*	int argumentCount: DEBUG
-*	char* args[]	 : DEBUG
+*  DESCRIPTION   : This function is used to identify the number of arguments passed from the command line, and
+*				   determine their values
+*  PARAMETERS    : Parameters are as follows,
+*	int argumentCount: Count of the number of arguments passed in
+*	char* args[]	 : Switches passed from the command line
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
 int proc_arguments(int argumentCount, char* args[])
@@ -35,34 +63,33 @@ int proc_arguments(int argumentCount, char* args[])
 	char expectedSwitch[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
-    // Only two argument besides the actual command allowed
-    if(argumentCount == 3) 
+	// Only two argument besides the actual command allowed
+	if (argumentCount == 3)
 	{
 		if (strcmp(args[1], "-p") == 0)
 		{
 			strcpy(storedData[CLA_PORT_NUMBER], args[CLA_PORT_NUMBER]);		//CLA_PORT_NUMBER is set as 2 in accordance with storedData's declaration in shared.h
 		}
 		return 1;
-    }
+	}
 
 
 	// If 10 arguments, must mean to start client.
 	else if (argumentCount == 10)
 	{
-
-
 		/*
 			This section checks and stores the proper arguments into place for later use
 			REFERENCE: INDEX LOCATION
 				0			1	 2		3	 4	 5		 6		   7	 8			9
 		./ispeed	-TCP/-UDP	-a ADDRESS	-p PORT		-s BLOCK_SIZE	-n NUM_BLOCKS
 		*/
-
-		/// Print all arguments to screen
+			
+		/// Print all arguments to screen DEBUG REMOVE BEFORE SUBMISSION
 		//for (int i = 0; i < 10; i++)
 		//{
 		//	printf("%d = %s\n",(i+1), args[i]);
 		//}
+
 
 		// Check the Type of Connection
 		if (strcmp(args[1], "-TCP") == 0)
@@ -70,14 +97,15 @@ int proc_arguments(int argumentCount, char* args[])
 		else if (strcmp(args[1], "-UDP") == 0)
 			strcpy(storedData[0], args[1]);
 
+
 		// Iterate through the arguments starting at 2 and iterating by 2 each time through the loop
-		int j = 0;
-		for (int i = 2; i < 10; i++)
+		int j = 0;						 // Index for the 2D storedData array
+		for (int i = 2; i < 10; i++)	 // Index for argument
 		{
 			// If the expected is found, store the data into the 2d array called "StoredData" 
 			if (strcmp(args[i], expectedSwitch[j]) == 0)
 			{
-				strcpy(storedData[j+1], args[i + 1]);
+				strcpy(storedData[j + 1], args[i + 1]);
 
 				int res = 0;
 				switch (j)
@@ -107,18 +135,10 @@ int proc_arguments(int argumentCount, char* args[])
 				return -2;	// Return an error that a switch was misplaced or not found
 			}
 
-			i++; // Index for argument
-			j++; // Index for the 2d storedData array
+			i++;
+			j++;
 		}
 	}
-
-	// Not the correct amount of arguments.. Display the instructions (Might not be smart to display instructions
-	// because it will conflict with a batch file)..
-	else
-	{
-		
-	}
-
 
 
 	if (strcmp(storedData[CLA_SOCKET_TYPE], "-TCP") == 0)			//CLA_SOCKET_TYPE is set to 0, in accordance with storedData's declaration in shared.h
@@ -129,7 +149,7 @@ int proc_arguments(int argumentCount, char* args[])
 	{
 		return 3;	//DEBUG NEED TO CHANGE FROM MAGIC NUMBER
 	}
-    return 0;
+	return 0;
 }
 
 
@@ -151,7 +171,7 @@ int validateAddress(char address[])
 	if (IPaddressLength == 32)											//IPv4 is 32 bits in length DDD.DDD.DDD.DDD (ex. 192.168.2.100)
 	{
 		int index = 0;
-		for (index = 0; index < IPaddressLength; index++)	
+		for (index = 0; index < IPaddressLength; index++)
 		{
 			if (index == (3 || 7 || 11))								//DEBUG might need to rewrite the statement to check for each value individually
 			{
@@ -189,42 +209,44 @@ int validateAddress(char address[])
 
 /*
 *  FUNCTION      : validatePort
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to check if the port CLA is valid
+*  PARAMETERS    : char* portString : String captured from the CLA indicating the target port number
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validatePort(char string[])
+int validatePort(char* portString)
 {
-	int res = 0;
-	// Check the port string to make sure its a port.
-	// If there is an error, return -1;
+	int portValid = 0;
+	portValid = convertCharToInt(portString);			//return of -1 indicates an error has occurred
+	if ((portValid > 0) && (portValid < 65535))
+	{
+		return portValid;
+	}
+	return ERROR_RETURN;
 
-	return res;
-}
+}//Done
 
 
 /*
 *  FUNCTION      : validateBlockSize
 *  DESCRIPTION   : This function is used to check if the block size is valid
-*  PARAMETERS    : char blockSizeString[] : String containing the block size
+*  PARAMETERS    : char* blockSizeString : String containing the block size
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validateBlockSize(char blockSizeString[])
+int validateBlockSize(char* blockSizeString)
 {
-	int blockSizeValid = 0;
-	int blockSize = convertCharToInt(blockSizeString);
-	switch (blockSize)
+	int blockSizeValid = convertCharToInt(blockSizeString);
+	switch (blockSizeValid)
 	{
-		case MESSAGE_BUFFER_SIZE_1000:
-		case MESSAGE_BUFFER_SIZE_2000:
-		case MESSAGE_BUFFER_SIZE_5000:
-		case MESSAGE_BUFFER_SIZE_10000:
-			blockSizeValid = 1;				//Valid block size
-			break;
+	case MESSAGE_BUFFER_SIZE_1000:
+	case MESSAGE_BUFFER_SIZE_2000:
+	case MESSAGE_BUFFER_SIZE_5000:
+	case MESSAGE_BUFFER_SIZE_10000:
+		blockSizeValid = 1;				//Valid block size
+		break;
 
-		default:
-			blockSizeValid = -1;			//Invalid block size
-			break;
+	default:
+		blockSizeValid = ERROR_RETURN;	//Invalid block size
+		break;
 	}
 
 	return blockSizeValid;
@@ -234,48 +256,17 @@ int validateBlockSize(char blockSizeString[])
 
 /*
 *  FUNCTION      : validateNumOfBlocks
-*  DESCRIPTION   : DEBUG
-*  PARAMETERS    : DEBUG
+*  DESCRIPTION   : This function is used to ensure the block count doesn't exceed a total data size of 1 Gb
+*  PARAMETERS    : char* blockCount : String representing the number of blocks to send over the network
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */
-int validateNumOfBlocks(char string[])
+int validateNumOfBlocks(char* blockCount)
 {
-	int res = 0;
-	// Check the number of blocks string to make sure its a valid size.
-	// If there is an error, return -1;
+	int blocksValid = convertCharToInt(blockCount);
+	if (blocksValid <= (1073741824 / 1000))			//Bytes per gigabyte
+	{
+		return blocksValid;							//Valid block count
+	}
+	return ERROR_RETURN;
 
-	return res;
-}
-
-int main(int argc, char* argv[])
-{
-    // startup WinSock in Windows
-#if defined _WIN32
-    WSADATA wsa_data;
-    WSAStartup(MAKEWORD(1,1), &wsa_data);
-#endif
-
-    // process the command line arguments
-	// If 1 argument, must be start server. 
-	// If 5 arguments, must be start client.
-    switch(proc_arguments(argc, argv))
-    {
-    case 1:
-        start_server();
-        break;
-    case 2:
-        start_client_protocol(SOCK_STREAM, IPPROTO_TCP);
-        break;
-	case 3:
-		start_client_protocol(SOCK_DGRAM, IPPROTO_UDP);
-		break;
-    }
-
-    // cleanup WinSock in Windows
-#if defined _WIN32
-    WSACleanup();
-#endif
-
-
-    return 0;
-}
+}//Done

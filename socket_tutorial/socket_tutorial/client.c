@@ -25,281 +25,85 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	int clientReturn = 0;											//Denotes if the function completed it's operation successfully 
 	struct sockaddr_in socketAddress;								//Local address struct
-	const char clientHostID[] = "client";							//Name of the client machine
-	struct hostent* hostIdentifier;									//Represent an entry in the hosts database
-
-
-	//Stage 1A: Get the client's network properties 
 	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
-	//socketAddress.sin_addr.s_addr = inet_addr(clientHostID);		//Convert the IPv4 internet host address name to binary
-	//if (socketAddress.sin_addr.s_addr == INADDR_NONE)				//Check if the internet address field is valid (INADDR_NONE = error state of internet address) 
-	//{
-
-	//	hostIdentifier = gethostbyname(clientHostID);				//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
-	//	if (hostIdentifier == NULL)
-	//	{
-	//		clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
-	//	}
-	//}
-	//else
-	//{
-	//	hostIdentifier = gethostbyaddr((const char*)&socketAddress.sin_addr, sizeof(struct sockaddr_in), AF_INET);	//Returns a structure of type hostent for the given host name (contains either a host name or an IPv4 address)
-	//	if (hostIdentifier == NULL)
-	//	{
-	//		clientReturn = setErrorState(SOCKET_HOST_ERROR);		//Unable to get host identifier (name or IP address)
-	//	}
-	//}
 
 
+	//Stage 1A : Setup the client's address struct
+	socketAddress.sin_family = AF_INET;											
+	socketAddress.sin_addr.s_addr = inet_addr(storedData[CLA_IP_ADDRESS]);
+	socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));
 
-	//Stage 1B : Setup the client's address struct
-	socketAddress.sin_family = AF_INET;											//Set the address family
-
-
-	// TESTING
-	socketAddress.sin_addr.s_addr = inet_addr(storedData[1]);
-	//inet_aton(storedData[CLA_IP_ADDRESS], &socketAddress.sin_addr.s_addr);	//Set the IP address
-	// TESTING END
-
-	socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);				//Set the port
-	
-
-	//clientReturn = 1;
 
 	//Host data has been retried and set, proceed to open the socket and run the message loop
-	if (clientReturn != ERROR)
+	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
+	if (openSocketHandle == INVALID_SOCKET)
+	{
+		clientReturn = setErrorState(SOCKET_CREATION_ERROR);
+	}
+	else
 	{
 
-		SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
-		if (openSocketHandle == INVALID_SOCKET)
+		//Connect to the server
+		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
+		if (boundSocketHandle == SOCKET_ERROR)
 		{
-			clientReturn = setErrorState(SOCKET_CREATION_ERROR);
+			clientReturn = setErrorState(SOCKET_CONNECTION_ERROR);
 		}
 		else
 		{
 
-			//Connect to the server
-			int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
-			if (boundSocketHandle == SOCKET_ERROR)
+			//Convert the CLA's and allocate space for the message buffer
+			int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
+			int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
+			int totalBytes = blockSize * numberOfBlocks;
+			char* messageBuffer = CreateMessageBuffer(blockSize);
+
+
+			#if defined _WIN32
+			Timer stopwatch;
+			stopwatch.startTime = GetTickCount();				//Start the Windows timer
+
+			#elif defined __linux__
+			startTime = stopWatch();							//Start the UNIX timer
+
+			#endif
+			int currentblockCount = 0;
+			while (currentblockCount < numberOfBlocks)			
 			{
-				clientReturn = setErrorState(SOCKET_CONNECTION_ERROR);
+				sendMessage(openSocketHandle, messageBuffer);	//Send the blocks across the network
+				currentblockCount++;
 			}
-			else
-			{
 
-				//Four possible block sizes are available for use
-				char messageBuffer1000[MESSAGE_BUFFER_SIZE_1000] = {""};
-				char messageBuffer2000[MESSAGE_BUFFER_SIZE_2000] = {""};
-				char messageBuffer5000[MESSAGE_BUFFER_SIZE_5000] = {""};
-				char messageBuffer10000[MESSAGE_BUFFER_SIZE_10000] = {""};
+			#if defined _WIN32
+			stopwatch.endTime = GetTickCount();					//Stop the Windows timer
 
+			#elif defined __linux__
+			endTime = stopWatch();								//Stop the UNIX timer
 
-				long startTime;
-				long endTime;
-				double elapsedTime = 0;
-				int sendStatus = 0;
-				int currentblockCount = 0;
+			#endif
+			stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
 
 
-				//Convert the command line arguments and send the corresponding  block size and frequency
-				int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
-				int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
-				
-
-				//Windows specific message transmission and time keeping
-				#if defined _WIN32
-				switch (blockSize)
-				{
-					case MESSAGE_BUFFER_SIZE_1000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer1000, 0, sizeof(messageBuffer1000));
-						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000, storedData[4]);
+			//Receive message from server about the missed data
+			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+			int proportionMissing = convertCharToInt(messageBuffer);
 
 
-						//Start the timer, and send all the blocks across the network
-						startTime = GetTickCount();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer1000);
-							currentblockCount++;
-						}
-						endTime = GetTickCount();
-						elapsedTime = endTime - startTime;
-						break;
+			//Receive message from server about the disordered data from the last transmission
+			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+			int disordered = convertCharToInt(messageBuffer);
 
 
-					case MESSAGE_BUFFER_SIZE_2000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer2000, 0, sizeof(messageBuffer2000));
-						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000, storedData[4]);
+			int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
 
 
-						//Start the timer, and send all the blocks across the network
-						startTime = GetTickCount();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer2000);
-							currentblockCount++;
-						}
-						endTime = GetTickCount();
-						elapsedTime = endTime - startTime;
-						break;
-
-
-					case MESSAGE_BUFFER_SIZE_5000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer5000, 0, sizeof(messageBuffer5000));
-						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = GetTickCount();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer5000);
-							currentblockCount++;
-						}
-						endTime = GetTickCount();
-						elapsedTime = endTime - startTime;
-						break;
-
-
-					case MESSAGE_BUFFER_SIZE_10000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer10000, 0, sizeof(messageBuffer10000));
-						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = GetTickCount();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer10000);
-							currentblockCount++;
-						}
-						endTime = GetTickCount();
-						elapsedTime = endTime - startTime;
-						break;
-
-
-					default:
-						break;
-				}
-
-				#elif defined __linux__
-				//UNIX specific message transmission and time keeping
-				switch (blockSize)
-				{
-					case MESSAGE_BUFFER_SIZE_1000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer1000, 0, sizeof(messageBuffer1000));
-						fillMessageBuffer(messageBuffer1000, MESSAGE_BUFFER_SIZE_1000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = stopWatch();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer1000);
-							currentblockCount++;
-						}
-						endTime = stopWatch();
-						elapsedTime = calculateElapsedTime(startTime, endTime);
-						break;
-
-
-					case MESSAGE_BUFFER_SIZE_2000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer2000, 0, sizeof(messageBuffer2000));
-						fillMessageBuffer(messageBuffer2000, MESSAGE_BUFFER_SIZE_2000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = stopWatch();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer2000);
-							currentblockCount++;
-						}
-						endTime = stopWatch();
-						elapsedTime = calculateElapsedTime(startTime, endTime);
-						break;
-
-
-					case MESSAGE_BUFFER_SIZE_5000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer5000, 0, sizeof(messageBuffer5000));
-						fillMessageBuffer(messageBuffer5000, MESSAGE_BUFFER_SIZE_5000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = stopWatch();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer5000);
-							currentblockCount++;
-						}
-						endTime = stopWatch();
-						elapsedTime = calculateElapsedTime(startTime, endTime);
-						break;
-
-
-					case MESSAGE_BUFFER_SIZE_10000:
-
-						//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-						memset((void*)messageBuffer10000, 0, sizeof(messageBuffer10000));
-						fillMessageBuffer(messageBuffer10000, MESSAGE_BUFFER_SIZE_10000, storedData[4]);
-
-
-						//Start the timer, and send all the blocks across the network
-						startTime = stopWatch();
-						while (currentblockCount < numberOfBlocks)
-						{
-							sendStatus = sendMessage(openSocketHandle, messageBuffer10000);
-							currentblockCount++;
-						}
-						endTime = stopWatch();
-						elapsedTime = calculateElapsedTime(startTime, endTime);
-						break;
-
-
-					default:
-						break;
-				}
-				#endif
-
-
-				//Prepare the buffer for incoming messages from the server
-				char recievedBuffer[MESSAGE_BUFFER_SIZE_1000] = "";
-				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));
-				
-				
-				//Receive the messages informing the client about the missed, and disordered data from the last transmission
-				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);
-				int proportionMissing = convertCharToInt(recievedBuffer);
-				memset((void*)recievedBuffer, 0, sizeof(recievedBuffer));
-
-
-				clientReturn = receiveMessage(openSocketHandle, recievedBuffer);
-				int disordered = convertCharToInt(recievedBuffer);
-
-
-				int totalBytes = blockSize * numberOfBlocks;
-				int megaBitsPerSecond = calculateSpeed(totalBytes, (int)elapsedTime);
-
-
-				printResults(blockSize, numberOfBlocks, (int)elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
-			}
+			printResults(blockSize, numberOfBlocks, (int)stopwatch.elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
+			free(messageBuffer);
 		}
-		closesocket(openSocketHandle);
 	}
+	closesocket(openSocketHandle);
 	return clientReturn;
 }
 
@@ -320,11 +124,31 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 
 
 /*
+*  FUNCTION      : CreateMessageBuffer
+*  DESCRIPTION   : This function is used to reserve a chunk of space in memory with the size 
+*				   defined at run time by the CLA's
+*  PARAMETERS    : Parameters are as follows,
+*	int bufferSize : Size of memory to reserve for the message buffer
+*  RETURNS       : void : The function has no return value
+*/
+char* CreateMessageBuffer(int bufferSize)
+{
+	//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
+	char *returnArray = malloc(sizeof(char) * bufferSize);
+	fillMessageBuffer(returnArray, bufferSize, storedData[CLA_NUMBER_OF_BLOCKS]);
+	
+	return returnArray;
+
+}//Done
+
+
+/*
 *  FUNCTION      : fillMessageBuffer
 *  DESCRIPTION   : This function is used to fill the messageBuffer with numbers 0 - 9
 *  PARAMETERS    : Parameters are as follows,
 *	int messageBuffer[] : Message buffer which will be filled with integers
 *	int bufferSize		: Buffer size set outside of the function, and used to set the target loop count
+*	char numOfTimes[]	: The number of messages that will be passed to the server
 *  RETURNS       : void : The function has no return value
 */
 void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
@@ -386,10 +210,10 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 	
 	tempStartingPoint[j] = 'G';
 
-	// Finally.. Add the starting to the message buffer
+	// Finally...Add the starting string to the message buffer
 	strcpy(messageBuffer, tempStartingPoint);
 
-	int totalCharacterAlreadyAdded = hexLength + lengthOfNumOfTimes + 1; // Find out how many characters have already been added
+	int totalCharacterAlreadyAdded = hexLength + lengthOfNumOfTimes + 1;	// Find out how many characters have already been added
 	for (index = totalCharacterAlreadyAdded; index < bufferSize; index++)	//Message buffer size can increase from 1,000 - 10,000 bytes
 	{
 		if (elementValue < 58)
@@ -400,7 +224,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 
 		if (elementValue == 58)
 		{
-			elementValue = 48;						//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
+			elementValue = 48;							//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
 
@@ -409,7 +233,6 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 }//Done
 
 
-//Prototypes OS specific
 #if defined __linux__
 /*
 *  FUNCTION      : stopWatch
@@ -422,7 +245,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
 *		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019,
 *			from https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
 */
-long stopWatch(void)
+double stopWatch(void)
 {
 	//struct contains the following fields:
 	/*
@@ -432,13 +255,12 @@ long stopWatch(void)
 		};
 	*/
 
-
-	//struct timeval time;
-	//if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
-	//{
-	//	return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
-	//}
-	return ERROR;
+	struct timeval time;
+	if (gettimeofday(&time, NULL) == 0)					//Return of 0 indicates success
+	{
+		return (time.tv_usec  / 1000);					//Milliseconds = (microseconds  / 1000)
+	}
+	return ERROR_RETURN;
 
 }//Done
 
@@ -446,33 +268,16 @@ long stopWatch(void)
 /*
 *  FUNCTION      : calculateElapsedTime
 *  DESCRIPTION   : This function is used to calculate the elapsed time for message transmission between the networked clients and server
-*  PARAMETERS    : clock_t startTime : Start time for when the transmission began
-*				   clock_t endTime	 : End time for when the transmission had finished
-*  RETURNS       : double : Returns the elapsedTime time between the two clock_t values
+*  PARAMETERS    : long startTime : Start time for when the transmission began
+*				   long endTime	  : End time for when the transmission had finished
+*  RETURNS       : double : Returns the elapsedTime time between the two values
 */
 double calculateElapsedTime(long startTime, long endTime)
 {
-
-	double elapsedTime = (double)(endTime - startTime);
-	return elapsedTime;
+	return (endTime - startTime);
 
 }//Done
 #endif
-
-
-/*
-*  FUNCTION      : convertCharToInt
-*  DESCRIPTION   : This function is used to convert characters to an integer
-*  PARAMETERS    : char* stringToConvert : The character string that will be converted to its integer counterpart
-*  RETURNS       : int : Returns the converted number from the character array
-*/
-int convertCharToInt(char* stringToConvert)
-{
-	int returnNumber = 0;
-	sscanf(stringToConvert, "%d", &returnNumber);
-	return returnNumber;
-
-}//Done
 
 
 /*

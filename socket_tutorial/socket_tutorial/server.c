@@ -97,7 +97,7 @@ int start_server_protocol(int* tcpOrUdp)
 		//Stage 2A: Initialize the socket struct
 		socketAddress.sin_family = AF_INET;										//Address family internet protocol
 		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
-		socketAddress.sin_port = htons(storedData[CLA_PORT_NUMBER]);			//Port defined by CLA
+		socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));			//Port defined by CLA
 
 
 		//Print server connection info to the screen		//DEBUG NEEDS TESTING
@@ -167,8 +167,6 @@ int start_server_protocol(int* tcpOrUdp)
 					do
 					{
 						recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-//Giving Issues			//networkResult = receiveMessage(acceptedSocketConnection, messageBuffer);
-
 						bytesReceived = strlen(messageBuffer);
 						amountOfTimesReceived++;
 						
@@ -206,7 +204,7 @@ int start_server_protocol(int* tcpOrUdp)
 								val = bytesInHex[i] - 65 + 10;
 							}
 
-							expectingBytes += val * pow(16, len);
+							expectingBytes += val * (long)(pow(16, len));
 							len--;
 						}
 

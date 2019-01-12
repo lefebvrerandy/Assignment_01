@@ -36,37 +36,19 @@ SOCKET createSocket(int addressFamily, int socketType, int protocolType)
 *  PARAMETERS    : The parameters are as follows,
 *	SOCKET connectedSocket	: Socket through which the message will be sent
 *	int message[]			: Contains the entire message
-*  RETURNS       : int : Returns an integer indicating if the process was a success or failure
+*  RETURNS       : void : has no return value
 */
-int sendMessage(SOCKET connectedSocket, char messageBuffer[])
+void sendMessage(SOCKET connectedSocket, char messageBuffer[])
 {
-	int sendStatus = send(connectedSocket, messageBuffer, strlen(messageBuffer), 0);
-	return sendStatus;
+	send(connectedSocket, messageBuffer, strlen(messageBuffer), 0);
 }
-
-
-/*
-*  FUNCTION      : receiveMessage
-*  DESCRIPTION   : This function is used to receive a message from the clients/servers, and save 
-*				   the return into the inbound message buffer
-*  PARAMETERS    : Parameters are as follows,
-*	SOCKET connectedSocket : Socket through which the messages will be received
-*	int messageBuffer[]	   : Array containing the received message from the other application
-*  RETURNS       : int : Returns an integer indicating if the process was a success or failure
-*/
-int receiveMessage(SOCKET connectedSocket, char messageBuffer[])
-{
-	int receiveStatus = recv(connectedSocket, messageBuffer, sizeof(messageBuffer), 0);
-	return receiveStatus;
-
-}//Done
 
 
 /*
 *  FUNCTION      : setErrorState
 *  DESCRIPTION   : This function is used to print an error to the console window, and set the return to a negative indicating an error has occurred during execution
 *  PARAMETERS    : This function takes no arguments
-*  RETURNS       : int : Returns -1 as defined by the constant ERROR
+*  RETURNS       : int : Returns -1 as defined by the constant ERROR_RETURN
 */
 int setErrorState(int errorState)
 {
@@ -106,5 +88,20 @@ int setErrorState(int errorState)
 
 	}
 
-	return ERROR;
+	return ERROR_RETURN;
+}//Done
+
+
+/*
+*  FUNCTION      : convertCharToInt
+*  DESCRIPTION   : This function is used to convert characters to an integer
+*  PARAMETERS    : char* stringToConvert : The character string that will be converted to its integer counterpart
+*  RETURNS       : int : Returns the converted number from the character array
+*/
+int convertCharToInt(char* stringToConvert)
+{
+	int returnNumber = 0;
+	sscanf(stringToConvert, "%d", &returnNumber);
+	return returnNumber;
+
 }//Done

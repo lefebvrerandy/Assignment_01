@@ -55,7 +55,7 @@ typedef int SOCKET;
 #define MESSAGE_BUFFER_SIZE_1000	1000
 #define MAX_ARGUMENT_LENGTH			15
 #define SWITCH_OPTIONS				5
-#define ERROR						-1
+#define ERROR_RETURN				-1
 
 
 //Network error states
@@ -89,8 +89,12 @@ char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 
 //Prototypes
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-int sendMessage(SOCKET connectedSocket, char messageBuffer[]);
-int receiveMessage(SOCKET connectedSocket, char messageBuffer[]);
+void sendMessage(SOCKET connectedSocket, char messageBuffer[]);
 int setErrorState(int errorState);
-
+int convertCharToInt(char* stringToConvert);
+int proc_arguments(int argumentCount, char* args[]);
+int validateAddress(char address[]);
+int validateBlockSize(char* blockSizeString);
+int validateNumOfBlocks(char* string);
+int validatePort(char* string);
 
