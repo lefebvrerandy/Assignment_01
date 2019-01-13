@@ -80,48 +80,34 @@ int start_server_protocol(int* tcpOrUdp)
 	SOCKET acceptedSocketConnection;	//Socket used for connecting to the clients
 
 
-
 	//Stage 1: Create local socket
 	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
-	if (openSocketHandle == -1)
+	if (openSocketHandle == ERROR_RETURN)
 	{
-		networkResult = setErrorState(SOCKET_CREATION_ERROR);					//Set return to -1, and print an error for the stage of connection
-		return SOCKET_CREATION_ERROR;
+		networkResult = setErrorState(SOCKET_CREATION_ERROR);						//Set return to -1, and print an error for the stage of connection
 	}
 	else
 	{
-		struct sockaddr_in socketAddress;
-		memset((void*)&socketAddress, 0, sizeof(socketAddress));				//Clear the address struct for initialization
-		
-
 		//Stage 2A: Initialize the socket struct
-		socketAddress.sin_family = AF_INET;										//Address family internet protocol
-		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
-		socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));			//Port defined by CLA
+		struct sockaddr_in socketAddress;
+		memset((void*)&socketAddress, 0, sizeof(socketAddress));					//Clear the address struct for initialization
+		socketAddress.sin_family = AF_INET;											//Address family internet protocol
+		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);							//Convert from host byte order to network byte order
+		socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));		//Port defined by CLA
 
 
-		//Print server connection info to the screen		//DEBUG NEEDS TESTING
+		//Convert an Internet network address into ASCII string 
 		char hostbuffer[256];
-		char messageBuffer[10000] = {""};
-		char *IPbuffer;
 		struct hostent *host_entry;
-		int hostname;
-
-		char hostPort[10];
-		strcpy(hostPort, storedData[CLA_PORT_NUMBER]);
-
-		hostname = gethostname(hostbuffer, sizeof(hostbuffer));
 		host_entry = gethostbyname(hostbuffer);
-		// To convert an Internet network 
-		// address into ASCII string 
-		IPbuffer = inet_ntoa(*((struct in_addr*)
-			host_entry->h_addr_list[0]));
+		char *IPbuffer;
+		IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
 
 
-		printf("Hostname: %s\n", hostbuffer);
+		//Print server connection info to the screen
+		printf("Hostname: %s\n", hostbuffer);					//DEBUG REMOVE BEFORE SUBMISSION
 		printf("Host IP: %s\n", IPbuffer);
-		printf("Port: %s\n", hostPort);
-
+		printf("Port: %s\n", storedData[CLA_PORT_NUMBER]);
 
 
 		//Stage 2B: Bind to the open socket
@@ -132,6 +118,7 @@ int start_server_protocol(int* tcpOrUdp)
 		}
 		else
 		{
+
 			//Stage 3: Listen for an incoming connection to the open socket
 			boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
 			if (boundSocketHandle == SOCKET_ERROR)
@@ -140,10 +127,9 @@ int start_server_protocol(int* tcpOrUdp)
 			}
 			else
 			{
-				struct sockaddr_in remoteAddress;
-
 
 				//Stage 4: Accept the incoming client connection
+				struct sockaddr_in remoteAddress;
 				socklen_t addressSize = sizeof(remoteAddress);
 				acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
 				if (acceptedSocketConnection == INVALID_SOCKET)
@@ -152,97 +138,61 @@ int start_server_protocol(int* tcpOrUdp)
 				}
 				else
 				{
-					memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-					int bytesReceived, lostBytes = 0;
-					// Set up parsing to understand the message
-					char bytesInHex[5] = { "" };
-					char numberOfTimesChar[10000] = {""};
-					int numberOfTimesInt = 0;
-					char tempMessage[10000] = { "" };
-					bool stopLooking = false;
-					char *ptr = NULL;
-					int amountOfTimesReceived = 0;
-					long expectingBytes = 0;		// Will contain the total size incoming
+
 					//Stage 6: Receive the clients reply
-					do
+					char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = {""};
+					recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+					int amountOfTimesReceived = 1;
+
+
+					//Make a copy of the original message
+					char messageCopy[MESSAGE_BUFFER_SIZE_10000] = {""};
+					strcpy(messageCopy, messageBuffer);
+
+
+					//Deconstruct the message and get its properties
+					long expectingBytes = getBlockSize(messageCopy);
+					int numberOfBlocks = getNumberOfBlocks(messageCopy);
+					int bytesReceived = 0;
+
+
+					//Find where the real message starts denoted by the letter 'G'
+					char *ptr = NULL;
+					ptr = strchr(messageCopy, 'G');
+					ptr++;
+					strcpy(messageCopy, ptr);
+
+
+					//DEBUG I HAVENT TESTED IT SINCE THE LAST PUSH
+					//DEBUG STILL NEED TO ADD A CHECK TO SEE IF THE FIRST MESSAGE WAS RECIEVED AS INTENDED
+
+
+					//Initial message has been received and parsed, check the remaining message and report the results
+					while(amountOfTimesReceived < numberOfBlocks)
 					{
+
+						//Clear the buffer and receive the next message
+						memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 						recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-						bytesReceived = strlen(messageBuffer);
 						amountOfTimesReceived++;
-						
-						// ////////////////////////////////////
-						// 
-						//	De-construct the message
-						//
-						// ////////////////////////////////////
 
-						// Take the first 4 characters and stored into bytesInHex
-						strcpy(tempMessage, messageBuffer);
-						for (int i = 0; i < 4; i++)
-						{
-							bytesInHex[i] = tempMessage[i];
-						}
-
-						// Convert Hex to decimal
-						int val = 0;
-						int len = 0;
-						expectingBytes = 0;
-						len = strlen(bytesInHex);
-						len--;
-						for (int i = 0; i < 4; i++)
-						{
-							if (bytesInHex[i] >= '0' && bytesInHex[i] <= '9')
-							{
-								val = bytesInHex[i] - 48;
-							}
-							else if (bytesInHex[i] >= 'a' && bytesInHex[i] <= 'f')
-							{
-								val = bytesInHex[i] - 97 + 10;
-							}
-							else if (bytesInHex[i] >= 'A' && bytesInHex[i] <= 'F')
-							{
-								val = bytesInHex[i] - 65 + 10;
-							}
-
-							expectingBytes += val * (long)(pow(16, len));
-							len--;
-						}
 
 						// Compare bytes received to what was expected
+						int lostBytes = 0;
+						bytesReceived = strlen(messageBuffer);
 						if (bytesReceived != expectingBytes)
 						{
 							lostBytes += expectingBytes - bytesReceived;
 						}
-
-						// Find how many messages should be coming in
-						ptr = tempMessage;
-						ptr += 4;
-						for (int i = 0; ptr[i] != 'G'; i++)
-						{
-							numberOfTimesChar[i] = tempMessage[i+4];
-						}
-						numberOfTimesInt = atoi(numberOfTimesChar);
-
-						// Find where the real message starts
-						ptr = strchr(tempMessage, 'G');
-						ptr++;
-						strcpy(tempMessage, ptr);
-						
-						if (amountOfTimesReceived == numberOfTimesInt)
-						{
-							stopLooking = true;
-						}
-					} while (stopLooking == false);
+					}
+				
 
 					int totalReceivedBytes = bytesReceived * amountOfTimesReceived;
-					int totalExpectingReceivedBytes = expectingBytes * numberOfTimesInt;
+					int totalExpectingReceivedBytes = expectingBytes * 0;
 					int totalLostBytes = totalExpectingReceivedBytes - totalReceivedBytes;
 					printf("Amount of Bytes Received: %d\n", totalReceivedBytes);
 					printf("Amount of Bytes Sent From Client: %d\n", totalExpectingReceivedBytes);
 					printf("Amount of Lost Bytes: %d\n", totalLostBytes);
-					printf("\n");
-					printf("Sending this to client....");
-					printf("\n");
 					printf("\n");
 				}
 			}
@@ -254,4 +204,73 @@ int start_server_protocol(int* tcpOrUdp)
 	closesocket(acceptedSocketConnection);
 	closesocket(openSocketHandle);
 	return networkResult;
+}
+
+
+//DEBUG ADD HEADER
+long getBlockSize(char messageCopy[])
+{
+
+	//Get the block size sub string from the message
+	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
+	for (int index = 0; index < BLOCK_SIZE_LENGTH; index++)								
+	{
+		messageProperties[index] = messageCopy[index];				//String stating the block size will never be larger than 4 chars (ie. first 4 chars of the array)
+	}
+
+	//Get the decimal value from the string 
+	long blockSize = convertHexToDecimal(messageProperties);
+	free(messageProperties);
+	return blockSize;
+}
+
+
+//DEBUG ADD HEADER
+int convertHexToDecimal(char* messageProperties)
+{
+	int convertedHex = 0;
+	int val = 0;
+	int expectingBytes = 0;
+	int len = strlen(messageProperties) - 1;
+	for (int index = 0; index < 4; index++)
+	{
+		if (messageProperties[index] >= '0' && messageProperties[index] <= '9')
+		{
+			val = messageProperties[index] - 48;
+		}
+		else if (messageProperties[index] >= 'a' && messageProperties[index] <= 'f')
+		{
+			val = messageProperties[index] - 97 + 10;
+		}
+		else if (messageProperties[index] >= 'A' && messageProperties[index] <= 'F')
+		{
+			val = messageProperties[index] - 65 + 10;
+		}
+
+		expectingBytes += val * (long)(pow(16, len));
+		len--;
+	}
+
+	return (long)convertedHex;
+}
+
+
+//DEBUG ADD HEADER
+int getNumberOfBlocks(char messageCopy[])
+{
+	char blockCount[MESSAGE_BUFFER_SIZE_10000] = { "" };
+	char *ptr = NULL;
+	ptr = messageCopy;								//Point to the beginning of the copied message
+	ptr += BLOCK_SIZE_OFFSET;						//Offset the index by 4 (block size string will always be the first 4 chars in the message)
+
+
+	//Scan the remainder of the string until the letter 'G' is encountered
+	for (int i = 0; ptr[i] != 'G'; i++)
+	{
+
+		//Copy each element of the block count string
+		blockCount[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
+	}
+	int blockCount = atoi(blockCount);
+	return blockCount;
 }

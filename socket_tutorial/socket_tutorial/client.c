@@ -56,7 +56,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 			int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
 			int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
 			int totalBytes = blockSize * numberOfBlocks;
-			char* messageBuffer = CreateMessageBuffer(blockSize);
+			char* messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks);
 
 
 			#if defined _WIN32
@@ -131,12 +131,21 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 *	int bufferSize : Size of memory to reserve for the message buffer
 *  RETURNS       : void : The function has no return value
 */
-char* CreateMessageBuffer(int bufferSize)
+char* CreateMessageBuffer(int bufferSize, int numberOfBlocks)
 {
-	//Prepare the outboundMessages for transmission, and fill each block with chars 0 - 9
-	char *returnArray = malloc(sizeof(char) * bufferSize);
-	fillMessageBuffer(returnArray, bufferSize, storedData[CLA_NUMBER_OF_BLOCKS]);
 	
+	char* returnArray = malloc(sizeof(char) * bufferSize);
+	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
+
+	//Set the message buffer's properties
+	setMessageProperties(messageProperties, bufferSize, numberOfBlocks);
+	strcpy(returnArray, messageProperties);
+	
+	//Find the amount of space occupied by the message properties, and offset the index
+	int propertyLength = strlen(returnArray);	
+
+	//Fill each block with chars 0 - 9
+	fillMessageBuffer(returnArray, bufferSize, propertyLength);					
 	return returnArray;
 
 }//Done
@@ -144,90 +153,87 @@ char* CreateMessageBuffer(int bufferSize)
 
 /*
 *  FUNCTION      : fillMessageBuffer
+*  DESCRIPTION   : This function is used to set the message properties (block size and count) and 
+*				   print them at the start of the outbound message array for the server
+*  PARAMETERS    : Parameters are as follows,
+*	int messageProperties[] : Array that will hold the message properties (ie. block size and count)
+*	int bufferSize			: The block size supplied by the CLA
+*	int numberOfBlocks		: The number of blocks supplied by the CLA
+*  RETURNS       : void : The function has no return value
+*/
+void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks)
+{
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// 
+	// The start to each of the messages will contain the block size (-s) and count (-n)
+	//		The first 4 characters are a hexadecimal converting number that contains
+	//		the block size that will be sent.
+	//		The fifth character, and until the first "G" will be the amount of messages
+	//		that will be passed.
+	//
+	// An example would be :"03E810G"
+	//			This will be parsed on the server to read "03E8" = 1000 size and "10" = times
+	//			"G" indicates the properties are over and all remaining chars constitute 
+	//			 the actual message
+	/////////////////////////////////////////////////////////////////////////////////
+	switch (bufferSize)											
+	{
+		case MESSAGE_BUFFER_SIZE_1000:	
+			strcpy(messageProperties, "03E8");	//Hex to decimal 1000 bytes
+			break;
+
+		case MESSAGE_BUFFER_SIZE_2000:
+			strcpy(messageProperties, "07D0");	//2000 bytes
+			break;
+
+		case MESSAGE_BUFFER_SIZE_5000:
+			strcpy(messageProperties, "1388");	//5000 bytes
+			break;
+
+		case MESSAGE_BUFFER_SIZE_10000:
+			strcpy(messageProperties, "2710");	//10,000 bytes
+			break;
+	}
+
+
+	char numBlocks[MESSAGE_PROPERTY_SIZE] = { "" };
+	sprintf(numBlocks, "%d", numberOfBlocks);
+	strcat(messageProperties, numBlocks);
+	strcat(messageProperties, "G");
+
+}//Done
+
+/*
+*  FUNCTION      : fillMessageBuffer
 *  DESCRIPTION   : This function is used to fill the messageBuffer with numbers 0 - 9
 *  PARAMETERS    : Parameters are as follows,
 *	int messageBuffer[] : Message buffer which will be filled with integers
-*	int bufferSize		: Buffer size set outside of the function, and used to set the target loop count
-*	char numOfTimes[]	: The number of messages that will be passed to the server
+*	int bufferSize		: The block size supplied by the CLA
+*	int messageIndexOffset : The amount of space already occupied by the message properties 
+*							 at the start of the outbound message array
 *  RETURNS       : void : The function has no return value
 */
-void fillMessageBuffer(char messageBuffer[], int bufferSize, char numOfTimes[])
+void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOffset)
 {
 	int index = 0;
-	int elementValue = 48;							//ASCII 48 is '0'
-	char tempStartingPoint[255] = { "" };
-
-	// Insert some data at the beginning of the message buffer so that the server knows what will all be sent
-	char sizeOfBuffInHex[4][4] = { {"03E8"},{"07D0"},{"1388"},{"2710"} };
-	int indexOfHexToInsert = 0;
-	const int hexLength = 4;	// This will be used to find out the total of characters already added
-	switch (bufferSize)
+	int elementValue = 48;											//ASCII 48 is '0'
+	for (index = messageIndexOffset; index < bufferSize; index++)	//Message buffer size can range from 1,000 - 10,000 bytes
 	{
-		case 1000:
-			indexOfHexToInsert = 0;
-			break;
-		case 2000:
-			indexOfHexToInsert = 1;
-			break;
-		case 5000:
-			indexOfHexToInsert = 2;
-			break;
-		case 10000:
-			indexOfHexToInsert = 3;
-			break;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////
-	// 
-	// From here one out, we are going to fill the buffer one index at a time. 
-	// The start to each of the messages will contain 5 very important character,
-	//	possible alittle more:
-	//		The first 4 characters are a hexadecimal converting number that contains
-	//		the block size that will be sent.
-	//		The fifth character, and until the first "-" will be the amount of messages
-	//		that will be passed.
-	// An example would be :"03E810G"
-	//			This will be parsed on the server to read "03E8" = 1000 size and "10" = times
-	//
-	// //////////////////////////////////////////////////////////////////////////////
-
-	// Insert the Hex value for the buffer that is being sent to the server at the beginning of every message
-	int i = 0;
-	for (i = 0; i < 4; i++)
-	{
-		tempStartingPoint[i] = sizeOfBuffInHex[indexOfHexToInsert][i];
-	}
-
-	// Insert the number of messages that will be passed to the server
-	int lengthOfNumOfTimes = strlen(numOfTimes);
-	int indexOfTimes = 0;
-	int j = 4;
-	for (j = 4; j < lengthOfNumOfTimes + 4; j++)
-	{
-		tempStartingPoint[j] = numOfTimes[indexOfTimes];
-		indexOfTimes++;
-	}
-	
-	tempStartingPoint[j] = 'G';
-
-	// Finally...Add the starting string to the message buffer
-	strcpy(messageBuffer, tempStartingPoint);
-
-	int totalCharacterAlreadyAdded = hexLength + lengthOfNumOfTimes + 1;	// Find out how many characters have already been added
-	for (index = totalCharacterAlreadyAdded; index < bufferSize; index++)	//Message buffer size can increase from 1,000 - 10,000 bytes
-	{
-		if (elementValue < 58)
+		if (elementValue < 58)										//ASCII 58 is the char after '9'
 		{
-			messageBuffer[index] = (char)elementValue;	//Fill the message buffer with the elements value from 0 - 9
+			messageBuffer[index] = (char)elementValue;				//Fill the message buffer with the elements value from 0 - 9
 			elementValue++;
 		}
 
 		if (elementValue == 58)
 		{
-			elementValue = 48;							//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
+			elementValue = 48;										//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
 
+
+	//Terminate the string with the carriage return
 	messageBuffer[index] = '\0';
 
 }//Done
@@ -314,5 +320,5 @@ int calculateSpeed(int bytes, int elapsedTimeMS)
 */
 void printResults(int size, int sent, int time, int speed, int missing, int disordered)
 {
-	printf("Size: %d Sent: %d, Time: %d, Speed: %d, Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
+	printf("Size: %d Sent: %d, Time: %dms, Speed: %dMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
 }

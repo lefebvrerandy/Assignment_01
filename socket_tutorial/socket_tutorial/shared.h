@@ -76,6 +76,14 @@ typedef int SOCKET;
 #define CLA_NUMBER_OF_BLOCKS	4
 
 
+//Message array index locations
+#define MESSAGE_PROPERTY_SIZE	255
+#define BLOCK_SIZE_LENGTH		4
+#define BLOCK_SIZE_OFFSET		4
+#define BLOCK_NUM_INDEX			4
+#define BLOCK_SIZE_INDEX		0
+
+
 //Global struct for all client connection info
 char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 /* storedData Breakdown: 

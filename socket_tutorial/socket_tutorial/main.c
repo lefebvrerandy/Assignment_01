@@ -83,13 +83,6 @@ int proc_arguments(int argumentCount, char* args[])
 				0			1	 2		3	 4	 5		 6		   7	 8			9
 		./ispeed	-TCP/-UDP	-a ADDRESS	-p PORT		-s BLOCK_SIZE	-n NUM_BLOCKS
 		*/
-			
-		/// Print all arguments to screen DEBUG REMOVE BEFORE SUBMISSION
-		//for (int i = 0; i < 10; i++)
-		//{
-		//	printf("%d = %s\n",(i+1), args[i]);
-		//}
-
 
 		// Check the Type of Connection
 		if (strcmp(args[1], "-TCP") == 0)
