@@ -154,37 +154,48 @@ int start_server_protocol(int* tcpOrUdp)
 					long expectingBytes = getBlockSize(messageCopy);
 					int numberOfBlocks = getNumberOfBlocks(messageCopy);
 					int bytesReceived = 0;
+					int lostBytes = 0;
+					int disorganizedCount = 0;
+					int prevBlockID = 0;
+					int currentBlockID = 0;			//DEBUG GET THE CURRENT BLOCK ID BEFORE ENTERING THE LOOP
+					int missedBlockCount = 0;		//
 
-
-					//Find where the real message starts denoted by the letter 'G'
-					char *ptr = NULL;
-					ptr = strchr(messageCopy, 'G');
-					ptr++;
-					strcpy(messageCopy, ptr);
-
-
-					//DEBUG I HAVENT TESTED IT SINCE THE LAST PUSH
-					//DEBUG STILL NEED TO ADD A CHECK TO SEE IF THE FIRST MESSAGE WAS RECIEVED AS INTENDED
-
-
-					//Initial message has been received and parsed, check the remaining message and report the results
-					while(amountOfTimesReceived < numberOfBlocks)
+					do
 					{
-
-						//Clear the buffer and receive the next message
-						memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-						recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-						amountOfTimesReceived++;
-
+						//Get the blocks ID and compare it to the previous one to see if any were missed
+						prevBlockID = getBlockID(messageBuffer);
+						bool wasBlockMissed = checkForMissedBlock(currentBlockID, prevBlockID);
+						if (wasBlockMissed == true)
+						{
+							missedBlockCount++;
+						}
 
 						// Compare bytes received to what was expected
-						int lostBytes = 0;
 						bytesReceived = strlen(messageBuffer);
 						if (bytesReceived != expectingBytes)
 						{
 							lostBytes += expectingBytes - bytesReceived;
 						}
-					}
+
+
+						//Find where the real message starts denoted by the letter 'G'
+						//If not found
+						char *ptr = NULL;
+						ptr = strchr(messageBuffer, 'G');
+						ptr++;
+						strcpy(messageBuffer, ptr);
+
+
+
+
+						//Clear the buffer and receive the next message if another one is still expected
+						if (amountOfTimesReceived < numberOfBlocks)
+						{
+							memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+							recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+							amountOfTimesReceived++;
+						}
+					}while (amountOfTimesReceived < numberOfBlocks);
 				
 
 					int totalReceivedBytes = bytesReceived * amountOfTimesReceived;
@@ -273,4 +284,30 @@ int getNumberOfBlocks(char messageCopy[])
 	}
 	int blockCount = atoi(blockCount);
 	return blockCount;
+}
+
+
+//DEBUG ADD HEADER
+int getBlockID(char messageCopy[])
+{
+	int blockID = 0;
+
+
+	//Jump to the blockID identifier in the message
+
+
+	return blockID;
+}
+
+
+//DEBUG ADD HEADER
+int getMissedByteCount(char messageCopy[])
+{
+	int bytesMissing = 0;
+
+
+	//Scan each char in the message, and count the number of non-sequential chars
+
+
+	return bytesMissing;
 }
