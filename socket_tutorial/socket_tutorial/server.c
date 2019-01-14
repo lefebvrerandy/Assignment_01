@@ -183,20 +183,22 @@ int start_server_protocol(int* tcpOrUdp)
 					{
 
 						//Get the blocks ID and compare it to the previous one to see if any were missed
-						messageData.prevBlockID = getBlockID(messageBuffer);
-						bool wasBlockMissed = checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
-						if (wasBlockMissed == true)
+						messageData.currentBlockID = getBlockID(messageBuffer);
+						if (messageData.currentBlockID != messageData.prevBlockID + 1)
 						{
+							//A block was missed, so increment the counter
 							missedBlockCount++;
 						}
+						messageData.prevBlockID = messageData.currentBlockID;
 
 
-						// Compare bytes received to what was expected
-						messageData.bytesReceived = strlen(messageBuffer);
-						if (messageData.bytesReceived != protocol.blockSize)
-						{
-							lostBytes += protocol.blockSize - messageData.bytesReceived;
-						}
+						//DEBUG IF THE WHOLE BLOCKS WILL BE LOST, NOT INDIVIDUAL BYTES, THEN WE PROBABLY DONT NEED THIS SECTION
+						////Compare bytes received to what was expected
+						//messageData.bytesReceived = strlen(messageBuffer);
+						//if (messageData.bytesReceived != protocol.blockSize)
+						//{
+						//	lostBytes += protocol.blockSize - messageData.bytesReceived;
+						//}
 
 
 						//Find where the real message starts denoted by the letter 'G'
@@ -335,22 +337,4 @@ int getBlockID(char messageCopy[])
 
 
 	return blockID;
-}
-
-
-/*
-*  FUNCTION      : getMissedByteCount
-*  DESCRIPTION   : This method is used to DEBUG
-*  PARAMETERS    : Function parameters are as follows
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
-*/
-int getMissedByteCount(char messageCopy[])
-{
-	int bytesMissing = 0;
-
-
-	//Scan each char in the message, and count the number of non-sequential chars
-
-
-	return bytesMissing;
 }
