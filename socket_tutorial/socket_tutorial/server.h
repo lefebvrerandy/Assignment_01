@@ -11,6 +11,23 @@
 #pragma comment (lib, "ws2_32.lib")
 
 
+//Struct containing the message properties as set by the clients CLA's
+typedef struct {
+	long blockSize;
+	int blockCount;
+
+}MessageProperties;
+
+
+//Struct used to track the networks performance
+typedef struct {
+	int prevBlockID;
+	int currentBlockID;
+	int bytesReceived;
+	int missingBytes;
+	int disorganizedBytes;
+
+}NetworkResults;
 
 
 //Function prototypes

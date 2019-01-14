@@ -139,6 +139,24 @@ int start_server_protocol(int* tcpOrUdp)
 				else
 				{
 
+					MessageProperties protocol;		//Tracks message properties
+					NetworkResults messageData;		//Tracks message details
+					
+
+					//SELECT() tutorial https://www.youtube.com/watch?v=qyFwGyTYe-M
+					struct timeval timeout;			//Tracks socket details
+					int fd = 0;						//DEBUG what do?
+					fd_set readfds;					//Used for select()
+					FD_ZERO(&readfds);				//DEBUG
+					FD_SET(fd, &readfds);			//DEBUG
+
+
+					int sret = select(8, &readfds, NULL, NULL, &timeout);
+					if (sret == 0)
+					{
+						//INSERT ERROR STATE?
+					}
+
 					//Stage 6: Receive the clients reply
 					char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = {""};
 					recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
@@ -151,55 +169,50 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 					//Deconstruct the message and get its properties
-					long expectingBytes = getBlockSize(messageCopy);
-					int numberOfBlocks = getNumberOfBlocks(messageCopy);
-					int bytesReceived = 0;
+					protocol.blockSize = getBlockSize(messageCopy);
+					protocol.blockCount = getNumberOfBlocks(messageCopy);
 					int lostBytes = 0;
-					int disorganizedCount = 0;
-					int prevBlockID = 0;
-					int currentBlockID = 0;			//DEBUG GET THE CURRENT BLOCK ID BEFORE ENTERING THE LOOP
-					int missedBlockCount = 0;		//
+					int missedBlockCount = 0;
 
 					do
 					{
+
 						//Get the blocks ID and compare it to the previous one to see if any were missed
-						prevBlockID = getBlockID(messageBuffer);
-						bool wasBlockMissed = checkForMissedBlock(currentBlockID, prevBlockID);
+						messageData.prevBlockID = getBlockID(messageBuffer);
+						bool wasBlockMissed = checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
 						if (wasBlockMissed == true)
 						{
 							missedBlockCount++;
 						}
 
+
 						// Compare bytes received to what was expected
-						bytesReceived = strlen(messageBuffer);
-						if (bytesReceived != expectingBytes)
+						messageData.bytesReceived = strlen(messageBuffer);
+						if (messageData.bytesReceived != protocol.blockSize)
 						{
-							lostBytes += expectingBytes - bytesReceived;
+							lostBytes += protocol.blockSize - messageData.bytesReceived;
 						}
 
 
 						//Find where the real message starts denoted by the letter 'G'
-						//If not found
 						char *ptr = NULL;
 						ptr = strchr(messageBuffer, 'G');
 						ptr++;
 						strcpy(messageBuffer, ptr);
 
 
-
-
 						//Clear the buffer and receive the next message if another one is still expected
-						if (amountOfTimesReceived < numberOfBlocks)
+						if (amountOfTimesReceived < protocol.blockCount)
 						{
 							memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 							recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
 							amountOfTimesReceived++;
 						}
-					}while (amountOfTimesReceived < numberOfBlocks);
+					}while (amountOfTimesReceived < protocol.blockCount);
 				
 
-					int totalReceivedBytes = bytesReceived * amountOfTimesReceived;
-					int totalExpectingReceivedBytes = expectingBytes * 0;
+					int totalReceivedBytes = messageData.bytesReceived * amountOfTimesReceived;
+					int totalExpectingReceivedBytes = protocol.blockSize * 0;
 					int totalLostBytes = totalExpectingReceivedBytes - totalReceivedBytes;
 					printf("Amount of Bytes Received: %d\n", totalReceivedBytes);
 					printf("Amount of Bytes Sent From Client: %d\n", totalExpectingReceivedBytes);

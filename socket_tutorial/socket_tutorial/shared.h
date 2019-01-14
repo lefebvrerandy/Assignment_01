@@ -32,8 +32,10 @@
 #include <netdb.h>			//UNIX network database operations
 #include <sys/types.h>		//UNIX clock & threading operations
 #include <sys/socket.h>		//UNIX socket operations
+#include <sys/select.h>		//UNIX socket operations
 #include <arpa/inet.h>		//UNIX internet operations
 #include <pthread.h>		//UNIX threading operations
+#include <poll.h>
 #endif
 
 
