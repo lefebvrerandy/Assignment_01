@@ -139,22 +139,23 @@ int start_server_protocol(int* tcpOrUdp)
 				else
 				{
 
-					MessageProperties protocol;		//Tracks message properties
-					NetworkResults messageData;		//Tracks message details
-					
-
 					//SELECT() tutorial https://www.youtube.com/watch?v=qyFwGyTYe-M
-					struct timeval timeout;			//Tracks socket details
-					int fd = 0;						//DEBUG what do?
-					fd_set readfds;					//Used for select()
-					FD_ZERO(&readfds);				//DEBUG
-					FD_SET(fd, &readfds);			//DEBUG
+					struct timeval timeout;					//Tracks socket connection details
+					int socketDescriptor = 0;				//File descriptor (ie. target socket)
+					fd_set readfds;							//file descriptor to be checked for being ready to read
+					FD_ZERO(&readfds);						//Initializes the file descriptor by setting fdset to have zero bits for all file descriptors
+					FD_SET(socketDescriptor, &readfds);		//Sets the bit for the file descriptor fd in the file descriptor
 
 
 					int sret = select(8, &readfds, NULL, NULL, &timeout);
 					if (sret == 0)
 					{
-						//INSERT ERROR STATE?
+						//Operation timedout
+
+					}
+					else
+					{
+						//Operation is not done
 					}
 
 					//Stage 6: Receive the clients reply
@@ -166,6 +167,10 @@ int start_server_protocol(int* tcpOrUdp)
 					//Make a copy of the original message
 					char messageCopy[MESSAGE_BUFFER_SIZE_10000] = {""};
 					strcpy(messageCopy, messageBuffer);
+
+
+					MessageProperties protocol;		//Tracks message properties
+					NetworkResults messageData;		//Tracks communication results
 
 
 					//Deconstruct the message and get its properties
@@ -231,7 +236,12 @@ int start_server_protocol(int* tcpOrUdp)
 }
 
 
-//DEBUG ADD HEADER
+/*
+*  FUNCTION      : getBlockSize
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
 long getBlockSize(char messageCopy[])
 {
 
@@ -249,7 +259,12 @@ long getBlockSize(char messageCopy[])
 }
 
 
-//DEBUG ADD HEADER
+/*
+*  FUNCTION      : convertHexToDecimal
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
 int convertHexToDecimal(char* messageProperties)
 {
 	int convertedHex = 0;
@@ -279,7 +294,12 @@ int convertHexToDecimal(char* messageProperties)
 }
 
 
-//DEBUG ADD HEADER
+/*
+*  FUNCTION      : getNumberOfBlocks
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
 int getNumberOfBlocks(char messageCopy[])
 {
 	char blockCount[MESSAGE_BUFFER_SIZE_10000] = { "" };
@@ -300,7 +320,12 @@ int getNumberOfBlocks(char messageCopy[])
 }
 
 
-//DEBUG ADD HEADER
+/*
+*  FUNCTION      : getBlockID
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
 int getBlockID(char messageCopy[])
 {
 	int blockID = 0;
@@ -313,7 +338,12 @@ int getBlockID(char messageCopy[])
 }
 
 
-//DEBUG ADD HEADER
+/*
+*  FUNCTION      : getMissedByteCount
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
 int getMissedByteCount(char messageCopy[])
 {
 	int bytesMissing = 0;
