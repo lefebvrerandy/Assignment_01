@@ -56,7 +56,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 			int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
 			int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
 			int totalBytes = blockSize * numberOfBlocks;
-			char* messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks);
+			char* messageBuffer;
 
 
 			#if defined _WIN32
@@ -68,11 +68,12 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 			#endif
 			int currentblockCount = 0;
-			while (currentblockCount < numberOfBlocks)			
+			do		
 			{
+				messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
 				sendMessage(openSocketHandle, messageBuffer);	//Send the blocks across the network
 				currentblockCount++;
-			}
+			} while (currentblockCount < numberOfBlocks);
 
 			#if defined _WIN32
 			stopwatch.endTime = GetTickCount();					//Stop the Windows timer
@@ -85,6 +86,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 			//Receive message from server about the missed data
+
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
 			int proportionMissing = convertCharToInt(messageBuffer);
@@ -131,14 +133,14 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 *	int bufferSize : Size of memory to reserve for the message buffer
 *  RETURNS       : void : The function has no return value
 */
-char* CreateMessageBuffer(int bufferSize, int numberOfBlocks)
+char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 	
 	char* returnArray = malloc(sizeof(char) * bufferSize);
 	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
 
 	//Set the message buffer's properties
-	setMessageProperties(messageProperties, bufferSize, numberOfBlocks);
+	setMessageProperties(messageProperties, bufferSize, numberOfBlocks, currentMsgNum);
 	strcpy(returnArray, messageProperties);
 	
 	//Find the amount of space occupied by the message properties, and offset the index
@@ -161,7 +163,7 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks)
 *	int numberOfBlocks		: The number of blocks supplied by the CLA
 *  RETURNS       : void : The function has no return value
 */
-void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks)
+void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 
 	//////////////////////////////////////////////////////////////////////////////////
@@ -172,11 +174,13 @@ void setMessageProperties(char messageProperties[], int bufferSize, int numberOf
 	//		The fifth character, and until the first "G" will be the amount of messages
 	//		that will be passed.
 	//
-	// An example would be :"03E810G"
-	//			This will be parsed on the server to read "03E8" = 1000 size and "10" = times
-	//			"G" indicates the properties are over and all remaining chars constitute 
-	//			 the actual message
+	//		XXXX = Hex code of how many bytes are coming
+	//		YYYY = Hex code of how many times its sending
+	//		XXXX = Which message number we are sending
+	//		G(or some other character thats not a - f | 0 - 9) = ending the information.
 	/////////////////////////////////////////////////////////////////////////////////
+
+	// Convert how many bytes are coming
 	switch (bufferSize)											
 	{
 		case MESSAGE_BUFFER_SIZE_1000:	
@@ -197,9 +201,19 @@ void setMessageProperties(char messageProperties[], int bufferSize, int numberOf
 	}
 
 
+	// Convert how many times its sending
+	// Convert the decimal number of Number of Blocks to hex and store it
 	char numBlocks[MESSAGE_PROPERTY_SIZE] = { "" };
-	sprintf(numBlocks, "%d", numberOfBlocks);
+	convertDecToHex(numberOfBlocks, numBlocks);
 	strcat(messageProperties, numBlocks);
+
+	// Convert which message number we are sending
+	// Convert the decimal number of which iteration is being sent to hex and store it
+	char msgNumHex[5] = {""};
+	convertDecToHex(currentMsgNum, msgNumHex);
+	strcat(messageProperties, msgNumHex);
+
+	// Append the ending "G" at the end of the format
 	strcat(messageProperties, "G");
 
 }//Done
@@ -321,4 +335,58 @@ int calculateSpeed(int bytes, int elapsedTimeMS)
 void printResults(int size, int sent, int time, int speed, int missing, int disordered)
 {
 	printf("Size: %d Sent: %d, Time: %dms, Speed: %dMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
+}
+
+/*
+*  FUNCTION      : convertDecToHex
+*  DESCRIPTION   : 
+*  PARAMETERS    : parameters are as follows,
+*	int decimal	  : 
+*	char* hexaNum : 
+*  RETURNS       : void
+*/
+void convertDecToHex(int decimal, char* hexaNum)
+{
+	long decimalNum;
+	long quotient;
+	long remainder;
+	int i = 0;
+	int j = 0;
+	char hexaNumBackwards[100] = { "" };
+
+
+	decimalNum = (long)decimal;
+
+	quotient = decimalNum;
+
+	while (quotient != 0)
+	{
+		remainder = quotient % 16;
+		if (remainder < 10)
+			hexaNumBackwards[j++] = 48 + remainder;
+		else
+			hexaNumBackwards[j++] = 55 + remainder;
+		quotient = quotient / 16;
+	}
+
+	int l = 0;
+	for (i = j; i > 0; i--)
+	{
+		hexaNum[l] = hexaNumBackwards[i - 1];
+		l++;
+	}
+
+	char buffer[5] = { "" };
+	if (strlen(hexaNumBackwards) < 4)
+	{
+
+		int strLength = 0;
+		strLength = strlen(hexaNumBackwards);
+		for (int i = strLength; i < 4; i++)
+		{
+			strcat(buffer, "0");
+		}
+		strcat(buffer, hexaNumBackwards);
+		strcpy(hexaNum, buffer);
+	}
 }

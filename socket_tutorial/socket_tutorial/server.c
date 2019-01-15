@@ -330,7 +330,7 @@ int getNumberOfBlocks(char messageCopy[])
 		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
 	int blockCount = 0;
-	sscanf(blockCountArray, "%d", &blockCount);
+	sscanf(blockCount, "%d", blockCountArray);
 	return blockCount;
 }
 
