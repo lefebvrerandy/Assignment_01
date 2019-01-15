@@ -322,3 +322,57 @@ void printResults(int size, int sent, int time, int speed, int missing, int diso
 {
 	printf("Size: %d Sent: %d, Time: %dms, Speed: %dMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
 }
+
+/*
+*  FUNCTION      : convertDecToHex
+*  DESCRIPTION   : 
+*  PARAMETERS    : parameters are as follows,
+*	int decimal	  : 
+*	char* hexaNum : 
+*  RETURNS       : void
+*/
+void convertDecToHex(int decimal, char* hexaNum)
+{
+	long decimalNum;
+	long quotient;
+	long remainder;
+	int i = 0;
+	int j = 0;
+	char hexaNumBackwards[100] = { "" };
+
+
+	decimalNum = (long)decimal;
+
+	quotient = decimalNum;
+
+	while (quotient != 0)
+	{
+		remainder = quotient % 16;
+		if (remainder < 10)
+			hexaNumBackwards[j++] = 48 + remainder;
+		else
+			hexaNumBackwards[j++] = 55 + remainder;
+		quotient = quotient / 16;
+	}
+
+	int l = 0;
+	for (i = j; i > 0; i--)
+	{
+		hexaNum[l] = hexaNumBackwards[i - 1];
+		l++;
+	}
+
+	char buffer[5] = { "" };
+	if (strlen(hexaNumBackwards) < 4)
+	{
+
+		int strLength = 0;
+		strLength = strlen(hexaNumBackwards);
+		for (int i = strLength; i < 4; i++)
+		{
+			strcat(buffer, "0");
+		}
+		strcat(buffer, hexaNumBackwards);
+		strcpy(hexaNum, buffer);
+	}
+}

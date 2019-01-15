@@ -27,3 +27,4 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOff
 double stopWatch(void);
 int calculateSpeed(int bytes, int elapsedTimeMS);
 void printResults(int size, int sent, int time, int speed, int missing, int disordered);
+void convertDecToHex(int decimal, char* hexaNum);
