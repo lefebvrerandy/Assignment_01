@@ -176,29 +176,14 @@ int start_server_protocol(int* tcpOrUdp)
 					//Deconstruct the message and get its properties
 					protocol.blockSize = getBlockSize(messageCopy);
 					protocol.blockCount = getNumberOfBlocks(messageCopy);
-					int lostBytes = 0;
-					int missedBlockCount = 0;
 
 					do
 					{
 
 						//Get the blocks ID and compare it to the previous one to see if any were missed
 						messageData.currentBlockID = getBlockID(messageBuffer);
-						if (messageData.currentBlockID != messageData.prevBlockID + 1)
-						{
-							//A block was missed, so increment the counter
-							missedBlockCount++;
-						}
-						messageData.prevBlockID = messageData.currentBlockID;
-
-
-						//DEBUG IF THE WHOLE BLOCKS WILL BE LOST, NOT INDIVIDUAL BYTES, THEN WE PROBABLY DONT NEED THIS SECTION
-						////Compare bytes received to what was expected
-						//messageData.bytesReceived = strlen(messageBuffer);
-						//if (messageData.bytesReceived != protocol.blockSize)
-						//{
-						//	lostBytes += protocol.blockSize - messageData.bytesReceived;
-						//}
+						messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
+						messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
 
 
 						//Find where the real message starts denoted by the letter 'G'
@@ -206,6 +191,7 @@ int start_server_protocol(int* tcpOrUdp)
 						ptr = strchr(messageBuffer, 'G');
 						ptr++;
 						strcpy(messageBuffer, ptr);
+
 
 
 						//Clear the buffer and receive the next message if another one is still expected
@@ -337,4 +323,45 @@ int getBlockID(char messageCopy[])
 
 
 	return blockID;
+}
+
+
+/*
+*  FUNCTION      : checkForMissedBlock
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
+int  checkForMissedBlock(int currentBlockID, int prevBlockID)
+{
+	int missingBlocks = 0;
+	if (currentBlockID != prevBlockID + 1)
+	{
+		//A block was missed, so increment the counter
+		missingBlocks++;
+	}
+
+	return missingBlocks;
+}
+
+
+/*
+*  FUNCTION      : getBytesMissing
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
+int getBytesMissing(int blockSize, char* messageBuffer)
+{
+	int lostBytes = 0;
+
+
+	//Compare bytes received to what was expected
+	int bytesReceived = strlen(messageBuffer);
+	if (bytesReceived != blockSize)
+	{
+		lostBytes += blockSize - bytesReceived;
+	}
+
+	return lostBytes;
 }

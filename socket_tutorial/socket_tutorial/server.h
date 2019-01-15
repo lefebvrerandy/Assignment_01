@@ -25,6 +25,7 @@ typedef struct {
 	int currentBlockID;
 	int bytesReceived;
 	int missingBytes;
+	int missingBlocks;
 	int disorganizedBytes;
 
 }NetworkResults;
