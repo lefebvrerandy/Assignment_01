@@ -241,7 +241,6 @@ int start_server_protocol(int* tcpOrUdp)
 */
 long getBlockSize(char messageCopy[])
 {
-
 	//Get the block size sub string from the message
 	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
 	for (int index = 0; index < BLOCK_SIZE_LENGTH; index++)								
