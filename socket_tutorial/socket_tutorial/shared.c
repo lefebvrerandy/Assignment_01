@@ -82,8 +82,12 @@ int setErrorState(int errorState)
 			perror("[ERROR]: Could get host by address");
 			break;
 
-		case SOCKET_TIMEOUT_ERROR:
+		case SOCKET_TIMEOUT:
 			perror("[ERROR]: Socket connection timed out");
+			break;
+
+		case SOCKET_SETTINGS_ERROR:
+			perror("[ERROR]: Socket could not be set to non-blocking with a time out");
 			break;
 
 		default:

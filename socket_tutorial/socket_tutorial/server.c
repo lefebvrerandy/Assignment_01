@@ -131,97 +131,121 @@ int start_server_protocol(int* tcpOrUdp)
 			}
 			else
 			{
-
-				//Stage 4: Accept the incoming client connection
-				struct sockaddr_in remoteAddress;
-				socklen_t addressSize = sizeof(remoteAddress);
-				acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
-				if (acceptedSocketConnection == INVALID_SOCKET)
+				do
 				{
-					networkResult = setErrorState(SOCKET_CONNECTION_ERROR);		//Set return to -1, and print an error for the stage of connection
-				}
-				else
-				{
-
-					//SELECT() tutorial https://www.youtube.com/watch?v=qyFwGyTYe-M
-					struct timeval timeout;					//Tracks socket connection details
-					fd_set readfds;							//file descriptor to be checked for being ready to read
-					FD_ZERO(&readfds);						//Initializes the file descriptor by setting fdset to have zero bits for all file descriptors
-					FD_SET(acceptedSocketConnection, &readfds);		//Sets the bit for the file descriptor fd in the file descriptor
-
-
-					//Stage 6: Receive the clients reply
-					char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
-					recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-					int amountOfTimesReceived = 1;
-
-
-					//Make a copy of the original message
-					char messageCopy[MESSAGE_BUFFER_SIZE_10000] = { "" };
-					strcpy(messageCopy, messageBuffer);
-
-
-					//Initialie the struct for tracking communication results
-					NetworkResults messageData;
-					messageData.prevBlockID = 0;
-					messageData.currentBlockID = 0;
-					messageData.bytesReceived = 0;
-					messageData.missingBytes = 0;
-					messageData.missingBlocks = 0;
-					messageData.disorganizedBytes = 0;
-
-
-					//Deconstruct the message and get its properties
-					MessageProperties protocol;								//Tracks message properties
-					protocol.blockSize = getBlockSize(messageCopy);
-					protocol.blockCount = getNumberOfBlocks(messageCopy);
-					int selectReturn = 0;
-					do
+					//Stage 4: Accept the incoming client connection
+					struct sockaddr_in remoteAddress;
+					socklen_t addressSize = sizeof(remoteAddress);
+					acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
+					if (acceptedSocketConnection == INVALID_SOCKET)
 					{
-						//Get the blocks ID and compare it to the previous one to see if any were missed
-						messageData.currentBlockID = getBlockID(messageBuffer);
-						messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
-						messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
+						networkResult = setErrorState(SOCKET_CONNECTION_ERROR);		//Set return to -1, and print an error for the stage of connection
+					}
+					else
+					{
+						struct timeval timeout;					//Tracks socket connection details
+						timeout.tv_sec = 5;						//Timeout to 5 seconds
+						timeout.tv_usec = 0;					//Timeout to 0 milliseconds
 
 
-						//Find where the real message starts denoted by the letter 'G'
-						char *ptr = NULL;
-						ptr = strchr(messageBuffer, 'G');
-						ptr++;
-						strcpy(messageBuffer, ptr);
-
-
-
-						//Clear the buffer and receive the next message if another one is still expected
-						if (amountOfTimesReceived < protocol.blockCount)
+						//Set the socket to be non blocking and have a time out as expressed above 
+						if (setsockopt(acceptedSocketConnection, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
 						{
-							memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-							recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
-							amountOfTimesReceived++;
+							networkResult = setErrorState(SOCKET_SETTINGS_ERROR);		//Set return to -1, and print an error for the stage of connection
 						}
+						else
+						{
+
+							//Stage 6: Receive the clients reply
+							char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
+							int recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+							int amountOfTimesReceived = 1;
 
 
-						//Check if there is still data waiting to be processed in the socket
-						selectReturn = select(0, &readfds, NULL, NULL, &timeout);
+							//Make a copy of the original message
+							char messageCopy[MESSAGE_BUFFER_SIZE_10000] = { "" };
+							strcpy(messageCopy, messageBuffer);
 
 
-					} while (selectReturn != 0);
+							//Initialie the struct for tracking communication results
+							NetworkResults messageData;
+							messageData.prevBlockID = 0;
+							messageData.currentBlockID = 0;
+							messageData.bytesReceived = 0;
+							messageData.missingBytes = 0;
+							messageData.missingBlocks = 0;
+							messageData.disorganizedBytes = 0;
 
-					int totalReceivedBytes = messageData.bytesReceived * amountOfTimesReceived;
-					int totalExpectingReceivedBytes = protocol.blockSize * 0;
-					int totalLostBytes = totalExpectingReceivedBytes - totalReceivedBytes;
-					printf("Amount of Bytes Received: %d\n", totalReceivedBytes);
-					printf("Amount of Bytes Sent From Client: %d\n", totalExpectingReceivedBytes);
-					printf("Amount of Lost Bytes: %d\n", totalLostBytes);
-					printf("\n");
-				}
+
+							//Deconstruct the message and get its properties
+							MessageProperties protocol;									//Tracks message properties
+							protocol.blockSize = getBlockSize(messageCopy);
+							protocol.blockCount = getNumberOfBlocks(messageCopy);
+							int selectReturn = 0;
+							do
+							{
+								//Get the blocks ID and compare it to the previous one to see if any were missed
+								messageData.currentBlockID = getBlockID(messageBuffer);
+								messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
+								messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
+
+
+								//Find where the real message starts denoted by the letter 'G'
+								//char *ptr = NULL;
+								//ptr = strchr(messageBuffer, 'G');
+								//ptr++;
+								//strcpy(messageBuffer, ptr);	//DEBUG MIGHT NEED TO CHANGE THIS DEPENDING ON HOW RANDY SETS THE CLIENT UP
+
+
+								//Clear the buffer and receive the next message if another one is still expected
+								memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+								recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+
+
+								//recv() call returned zero bytes indicating the connection was closed
+								if (recvStatus == 0)
+								{
+									networkResult = setErrorState(SOCKET_CLOSED);
+								}
+
+								//recv() call returned an error indicating the connection timedout
+								else
+								{
+									networkResult = setErrorState(SOCKET_TIMEOUT);
+								}
+								amountOfTimesReceived++;
+							} while (recvStatus > 0);
+
+
+							//Package the results and send them off to the client and disconnect the socket
+							//packageResults(messageBuffer, 
+							//	messageData,
+							//	messageData.missingBlocks);
+
+
+							//Ensure the socket is still intact before sending the message
+							if (networkResult == SOCKET_TIMEOUT)
+							{
+								send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+							}
+
+
+							//Report the server size details DEBUG REMOVE BEFORE SUBMISSION
+							printf("Amount of Bytes Sent From Client: %d\n", (int)(protocol.blockCount * protocol.blockSize));
+							printf("Amount of Bytes Received: %d\n", messageData.bytesReceived);
+							printf("Amount of Lost Blocks: %d\n", messageData.missingBlocks);
+							printf("\n");
+						}
+					}
+
+					closesocket(acceptedSocketConnection);
+				} while (1);	//DEBUG SET TO MONITOR TIME AND AUOT DISCONNECT ONCE A CERTAIN TIME SPAN HAS PASSED WITH NO INCOMING CONNECTIONS
 			}
 		}
 	}
 
 
 	//Clean up before exiting
-	closesocket(acceptedSocketConnection);
 	closesocket(openSocketHandle);
 	return networkResult;
 }
@@ -306,7 +330,7 @@ int getNumberOfBlocks(char messageCopy[])
 		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
 	int blockCount = 0;
-	sprintfs(blockCount, "%d", blockCountArray);
+	sscanf(blockCountArray, "%d", &blockCount);
 	return blockCount;
 }
 

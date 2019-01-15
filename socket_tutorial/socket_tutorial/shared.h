@@ -66,6 +66,7 @@ typedef int SOCKET;
 
 
 //Network error states
+#define SOCKET_CLOSED			0
 #define SOCKET_CREATION_ERROR	-1
 #define SOCKET_BIND_ERROR		-2
 #define SOCKET_LISTEN_ERROR		-3
@@ -73,7 +74,8 @@ typedef int SOCKET;
 #define SOCKET_SEND_ERROR		-5
 #define SOCKET_RECEIVE_ERROR	-6
 #define SOCKET_HOST_ERROR		-7
-#define SOCKET_TIMEOUT_ERROR	-8
+#define SOCKET_TIMEOUT			-8
+#define SOCKET_SETTINGS_ERROR	-9
 
 
 //Location ID's for storedDatas command line arguments
