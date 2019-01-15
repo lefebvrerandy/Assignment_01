@@ -88,26 +88,30 @@ int start_server_protocol(int* tcpOrUdp)
 	}
 	else
 	{
+
 		//Stage 2A: Initialize the socket struct
 		struct sockaddr_in socketAddress;
-		memset((void*)&socketAddress, 0, sizeof(socketAddress));					//Clear the address struct for initialization
-		socketAddress.sin_family = AF_INET;											//Address family internet protocol
-		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);							//Convert from host byte order to network byte order
-		socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));		//Port defined by CLA
+		memset((void*)&socketAddress, 0, sizeof(socketAddress));				//Clear the address struct for initialization
+		socketAddress.sin_family = AF_INET;										//Address family internet protocol
+		socketAddress.sin_addr.s_addr = htonl(INADDR_ANY);						//Convert from host byte order to network byte order
+		socketAddress.sin_port = htons((u_short)storedData[CLA_PORT_NUMBER]);
+		
 
-
-		//Convert an Internet network address into ASCII string 
-		char hostbuffer[256];
-		struct hostent *host_entry;
-		host_entry = gethostbyname(hostbuffer);
+		char hostbuffer[HOST_BUFFER_SIZE];
 		char *IPbuffer;
+		struct hostent *host_entry;
+		int hostname;
+		char hostPort[PORT_LENGTH];
+		strcpy(hostPort, storedData[CLA_PORT_NUMBER]);
+		hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+		host_entry = gethostbyname(hostbuffer);
 		IPbuffer = inet_ntoa(*((struct in_addr*)host_entry->h_addr_list[0]));
 
 
-		//Print server connection info to the screen
-		printf("Hostname: %s\n", hostbuffer);					//DEBUG REMOVE BEFORE SUBMISSION
+		//Print the servers details
+		printf("Hostname: %s\n", hostbuffer);
 		printf("Host IP: %s\n", IPbuffer);
-		printf("Port: %s\n", storedData[CLA_PORT_NUMBER]);
+		printf("Port: %s\n", hostPort);
 
 
 		//Stage 2B: Bind to the open socket
@@ -141,39 +145,24 @@ int start_server_protocol(int* tcpOrUdp)
 
 					//SELECT() tutorial https://www.youtube.com/watch?v=qyFwGyTYe-M
 					struct timeval timeout;					//Tracks socket connection details
-					int socketDescriptor = 0;				//File descriptor (ie. target socket)
 					fd_set readfds;							//file descriptor to be checked for being ready to read
 					FD_ZERO(&readfds);						//Initializes the file descriptor by setting fdset to have zero bits for all file descriptors
-					FD_SET(socketDescriptor, &readfds);		//Sets the bit for the file descriptor fd in the file descriptor
+					FD_SET(acceptedSocketConnection, &readfds);		//Sets the bit for the file descriptor fd in the file descriptor
 
-
-					int sret = select(8, &readfds, NULL, NULL, &timeout);
-					if (sret == 0)
-					{
-						//Operation timedout
-
-					}
-					else
-					{
-						//Operation is not done
-					}
 
 					//Stage 6: Receive the clients reply
-					char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = {""};
+					char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
 					recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
 					int amountOfTimesReceived = 1;
 
 
 					//Make a copy of the original message
-					char messageCopy[MESSAGE_BUFFER_SIZE_10000] = {""};
+					char messageCopy[MESSAGE_BUFFER_SIZE_10000] = { "" };
 					strcpy(messageCopy, messageBuffer);
 
 
-					MessageProperties protocol;		//Tracks message properties
-					NetworkResults messageData;		//Tracks communication results
-					
-
-					//Initialize the struct
+					//Initialie the struct for tracking communication results
+					NetworkResults messageData;
 					messageData.prevBlockID = 0;
 					messageData.currentBlockID = 0;
 					messageData.bytesReceived = 0;
@@ -183,12 +172,12 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 					//Deconstruct the message and get its properties
+					MessageProperties protocol;								//Tracks message properties
 					protocol.blockSize = getBlockSize(messageCopy);
 					protocol.blockCount = getNumberOfBlocks(messageCopy);
-
+					int selectReturn = 0;
 					do
 					{
-
 						//Get the blocks ID and compare it to the previous one to see if any were missed
 						messageData.currentBlockID = getBlockID(messageBuffer);
 						messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
@@ -210,8 +199,13 @@ int start_server_protocol(int* tcpOrUdp)
 							recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
 							amountOfTimesReceived++;
 						}
-					}while (amountOfTimesReceived < protocol.blockCount);
-				
+
+
+						//Check if there is still data waiting to be processed in the socket
+						selectReturn = select(0, &readfds, NULL, NULL, &timeout);
+
+
+					} while (selectReturn != 0);
 
 					int totalReceivedBytes = messageData.bytesReceived * amountOfTimesReceived;
 					int totalExpectingReceivedBytes = protocol.blockSize * 0;
@@ -312,7 +306,7 @@ int getNumberOfBlocks(char messageCopy[])
 		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
 	int blockCount = 0;
-	sprintf(blockCount, "%d", blockCountArray);
+	sprintfs(blockCount, "%d", blockCountArray);
 	return blockCount;
 }
 

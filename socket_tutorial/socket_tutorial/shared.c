@@ -82,6 +82,10 @@ int setErrorState(int errorState)
 			perror("[ERROR]: Could get host by address");
 			break;
 
+		case SOCKET_TIMEOUT_ERROR:
+			perror("[ERROR]: Socket connection timed out");
+			break;
+
 		default:
 			perror("[ERROR]: Unidentified error has occurred");
 			break;

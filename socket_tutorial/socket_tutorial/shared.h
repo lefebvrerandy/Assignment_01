@@ -60,6 +60,11 @@ typedef int SOCKET;
 #define ERROR_RETURN				-1
 
 
+//Network properties
+#define HOST_BUFFER_SIZE		255
+#define PORT_LENGTH				10
+
+
 //Network error states
 #define SOCKET_CREATION_ERROR	-1
 #define SOCKET_BIND_ERROR		-2
@@ -68,6 +73,7 @@ typedef int SOCKET;
 #define SOCKET_SEND_ERROR		-5
 #define SOCKET_RECEIVE_ERROR	-6
 #define SOCKET_HOST_ERROR		-7
+#define SOCKET_TIMEOUT_ERROR	-8
 
 
 //Location ID's for storedDatas command line arguments
