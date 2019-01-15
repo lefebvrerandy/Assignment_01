@@ -21,8 +21,8 @@ typedef struct {
 //Function prototypes
 int start_client_protocol(int stream_or_datagram, int tcp_or_udp);
 int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress);
-char* CreateMessageBuffer(int bufferSize, int numberOfBlocks);
-void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks);
+char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum);
+void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks, int currentMsgNum);
 void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOffset);
 double stopWatch(void);
 int calculateSpeed(int bytes, int elapsedTimeMS);

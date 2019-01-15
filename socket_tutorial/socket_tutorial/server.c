@@ -306,7 +306,7 @@ int getNumberOfBlocks(char messageCopy[])
 		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
 	int blockCount = 0;
-	sprintfs(blockCount, "%d", blockCountArray);
+	sscanf(blockCount, "%d", blockCountArray);
 	return blockCount;
 }
 
