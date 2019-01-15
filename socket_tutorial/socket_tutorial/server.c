@@ -171,6 +171,15 @@ int start_server_protocol(int* tcpOrUdp)
 
 					MessageProperties protocol;		//Tracks message properties
 					NetworkResults messageData;		//Tracks communication results
+					
+
+					//Initialize the struct
+					messageData.prevBlockID = 0;
+					messageData.currentBlockID = 0;
+					messageData.bytesReceived = 0;
+					messageData.missingBytes = 0;
+					messageData.missingBlocks = 0;
+					messageData.disorganizedBytes = 0;
 
 
 					//Deconstruct the message and get its properties
@@ -290,7 +299,7 @@ int convertHexToDecimal(char* messageProperties)
 */
 int getNumberOfBlocks(char messageCopy[])
 {
-	char blockCount[MESSAGE_BUFFER_SIZE_10000] = { "" };
+	char blockCountArray[MESSAGE_BUFFER_SIZE_10000] = { "" };
 	char *ptr = NULL;
 	ptr = messageCopy;								//Point to the beginning of the copied message
 	ptr += BLOCK_SIZE_OFFSET;						//Offset the index by 4 (block size string will always be the first 4 chars in the message)
@@ -301,9 +310,10 @@ int getNumberOfBlocks(char messageCopy[])
 	{
 
 		//Copy each element of the block count string
-		blockCount[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
+		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
-	int blockCount = atoi(blockCount);
+	int blockCount = 0;
+	sprintf(blockCount, "%d", blockCountArray);
 	return blockCount;
 }
 
