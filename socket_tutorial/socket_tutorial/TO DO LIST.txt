@@ -1,0 +1,24 @@
+// This is a list of things that we still need to get done.
+// Feel free to add or delete anything you see fit
+// Format preferred would  be: 
+	- {Number if it will have a dependency} [dependencies if any] (file name) (function if any) (general description of what needs done)
+		Feel free to add a second line -tabbed in with a possible FIX if any
+
+// Client
+- (client.c) (convertDecToHex) (Contains magic numbers)
+
+// Server
+- {1}(server.c) (start_server()) (We need to uncomment and debug UDP to make sure it connects properly to UDP)
+-	[1](server.c) (start_server()) (Currently one of the threads will be run and it will never join since the second thread is in a wait loop with (accept))
+- (server.c) (start_server()) (server has a DEBUG sleep(10000) and will need to be taken out)
+- (server.c) (convertHexToDecimal()) (Contains magic numbers)
+
+// Windows Specific
+-
+
+// Linux Specific
+- The project still needs to be run in linux for the first time
+
+// General concerns or thoughts
+- It might be nice if we move all the specific windows/linux calls into a general function. e.g. 
+	=function to start stop watch. Inside this function it can decide if windows or linux is neccesary and call the appropriate one

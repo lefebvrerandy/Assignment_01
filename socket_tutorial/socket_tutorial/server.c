@@ -275,7 +275,7 @@ long getBlockSize(char messageCopy[])
 
 /*
 *  FUNCTION      : convertHexToDecimal
-*  DESCRIPTION   : This method is used to DEBUG
+*  DESCRIPTION   : 
 *  PARAMETERS    : Function parameters are as follows
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
