@@ -187,6 +187,7 @@ int start_server_protocol(int* tcpOrUdp)
 								//Get the blocks ID and compare it to the previous one to see if any were missed
 								messageData.currentBlockID = getBlockID(messageBuffer);
 								messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
+								messageData.prevBlockID = messageData.currentBlockID;
 								messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
 
 
@@ -209,6 +210,7 @@ int start_server_protocol(int* tcpOrUdp)
 								}
 
 								//recv() call returned an error indicating the connection timedout
+				// Double check this else
 								else
 								{
 									networkResult = setErrorState(SOCKET_TIMEOUT);
@@ -261,10 +263,13 @@ long getBlockSize(char messageCopy[])
 {
 	//Get the block size sub string from the message
 	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
-	for (int index = 0; index < BLOCK_SIZE_LENGTH; index++)								
+	int index = 0;
+	for (index = 0; index < BLOCK_SIZE_LENGTH; index++)								
 	{
 		messageProperties[index] = messageCopy[index];				//String stating the block size will never be larger than 4 chars (ie. first 4 chars of the array)
 	}
+	messageProperties[index] = '\0';
+
 
 	//Get the decimal value from the string 
 	long blockSize = convertHexToDecimal(messageProperties);
@@ -283,7 +288,6 @@ int convertHexToDecimal(char* messageProperties)
 {
 	int convertedHex = 0;
 	int val = 0;
-	int expectingBytes = 0;
 	int len = strlen(messageProperties) - 1;
 	for (int index = 0; index < 4; index++)
 	{
@@ -300,7 +304,7 @@ int convertHexToDecimal(char* messageProperties)
 			val = messageProperties[index] - 65 + 10;
 		}
 
-		expectingBytes += val * (long)(pow(16, len));
+		convertedHex += val * (long)(pow(16, len));
 		len--;
 	}
 
@@ -323,14 +327,19 @@ int getNumberOfBlocks(char messageCopy[])
 
 
 	//Scan the remainder of the string until the letter 'G' is encountered
-	for (int i = 0; ptr[i] != 'G'; i++)
+	int i = BLOCK_SIZE_OFFSET;
+	int j = 0;
+	for (i = BLOCK_SIZE_OFFSET; i < 8; i++)
 	{
 
 		//Copy each element of the block count string
-		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
+		blockCountArray[j] = messageCopy[i];
+		j++;
 	}
+	blockCountArray[j] = '\0';
+
 	int blockCount = 0;
-	sscanf(blockCount, "%d", blockCountArray);
+	blockCount = convertHexToDecimal(blockCountArray);
 	return blockCount;
 }
 
@@ -344,9 +353,21 @@ int getNumberOfBlocks(char messageCopy[])
 int getBlockID(char messageCopy[])
 {
 	int blockID = 0;
-
+	char blockIdArray[5] = {""};
 
 	//Jump to the blockID identifier in the message
+
+	int i = 8;
+	int j = 0;
+	for (i = 8; i < 12; i++)
+	{
+
+		//Copy each element of the block id string
+		blockIdArray[j] = messageCopy[i];
+		j++;
+	}
+
+	blockID = convertHexToDecimal(blockIdArray);
 
 
 	return blockID;
