@@ -93,6 +93,12 @@ typedef int SOCKET;
 #define BLOCK_SIZE_OFFSET		4
 #define BLOCK_NUM_INDEX			4
 #define BLOCK_SIZE_INDEX		0
+#define ASCII_VALUE_0			48
+#define ASCII_VALUE_9			58
+#define MAX_FORMAT_SIZE			4
+#define CMDLINE_START_OFFSET	2
+#define CMDLINE_MAX_PARAMETERS_CLIENT	10
+#define CMDLINE_MAX_PARAMETERS_SERVER	3
 
 
 //Global struct for all client connection info

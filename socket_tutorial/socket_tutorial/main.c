@@ -63,8 +63,8 @@ int proc_arguments(int argumentCount, char* args[])
 	char expectedSwitch[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH] = { {"-a"}, {"-p"}, {"-s"}, {"-n"} };
 
 
-	// Only two argument besides the actual command allowed
-	if (argumentCount == 3)
+	// Only two argument besides the actual exe call is allowed to start a server
+	if (argumentCount == CMDLINE_MAX_PARAMETERS_SERVER)
 	{
 		if (strcmp(args[1], "-p") == 0)
 		{
@@ -75,7 +75,7 @@ int proc_arguments(int argumentCount, char* args[])
 
 
 	// If 10 arguments, must mean to start client.
-	else if (argumentCount == 10)
+	else if (argumentCount == CMDLINE_MAX_PARAMETERS_CLIENT)
 	{
 		/*
 			This section checks and stores the proper arguments into place for later use
@@ -93,7 +93,7 @@ int proc_arguments(int argumentCount, char* args[])
 
 		// Iterate through the arguments starting at 2 and iterating by 2 each time through the loop
 		int j = 0;						 // Index for the 2D storedData array
-		for (int i = 2; i < 10; i++)	 // Index for argument
+		for (int i = CMDLINE_START_OFFSET; i < CMDLINE_MAX_PARAMETERS_CLIENT; i++)	 // Index for argument
 		{
 			// If the expected is found, store the data into the 2d array called "StoredData" 
 			if (strcmp(args[i], expectedSwitch[j]) == 0)
@@ -166,7 +166,7 @@ int validateAddress(char address[])
 		int index = 0;
 		for (index = 0; index < IPaddressLength; index++)
 		{
-			if (index == (3 || 7 || 11))								//DEBUG might need to rewrite the statement to check for each value individually
+			if ((index == 3) || (index == 7) || (index == 11) )								//DEBUG might need to rewrite the statement to check for each value individually
 			{
 				if (address[index] != '.')
 				{
