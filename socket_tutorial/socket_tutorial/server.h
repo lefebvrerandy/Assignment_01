@@ -23,10 +23,14 @@ typedef struct {
 typedef struct {
 	int prevBlockID;
 	int currentBlockID;
-	int bytesReceived;
-	int missingBytes;
-	int missingBlocks;
-	int disorganizedBytes;
+	int bytesReceivedCount;
+	int blocksReceivedCount;
+	int missingBytesCount;
+	int missingBlockCount;
+	int disorganizedBytesCount;
+	int disorganizedBlocksCount;
+	int receivedBlocks[MESSAGE_BUFFER_SIZE_10000];
+	int missedBlocks[MESSAGE_BUFFER_SIZE_10000];
 
 }NetworkResults;
 
@@ -34,7 +38,10 @@ typedef struct {
 //Function prototypes
 int start_server();
 int start_server_protocol(int* tcpOrUdp);
-int validateAddress(char string[]);
-int validatePort(char* string);
-int validateBlockSize(char* string);
-int validateNumOfBlocks(char* string);
+long getBlockSize(char messageCopy[]);
+int convertHexToDecimal(char* messageProperties);
+int getNumberOfBlocks(char messageCopy[]);
+int getBlockID(char messageCopy[]);
+int checkForMissedBlock(int currentBlockID, int prevBlockID);
+int getBytesMissing(int blockSize, char* messageBuffer);
+void packageResults(char messagBuffer[], int packagedValue);

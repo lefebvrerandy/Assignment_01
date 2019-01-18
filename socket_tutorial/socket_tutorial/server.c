@@ -42,19 +42,19 @@ int start_server()
 	if (pthread_create(&thread_linux_server[0], NULL, start_server_protocol, (void*)tcpArray) != 0)
 	{
 		// An error has occurred
-		perror("Could not create Thread.");
+		printf("Could not create Thread.");
 	}
 	else if (pthread_create(&thread_linux_server[1], NULL, start_server_protocol, (void*)udpArray) != 0)
 	{
 		// An error has occurred
-		perror("Could not create Thread.");
+		printf("Could not create Thread.");
 	}
 
 	for (int i = 0; i < 2; i++)
 	{
 		if (pthread_join(thread_linux_server[i], (void **)ptr_status) != 0)
 		{
-			perror("Cannot join Threads.");
+			printf("Cannot join Threads.");
 		}
 	}
 
@@ -158,7 +158,11 @@ int start_server_protocol(int* tcpOrUdp)
 
 							//Stage 6: Receive the clients reply
 							char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = { "" };
-							int recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+							int recvStatus = 0;
+							do
+							{
+								recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+							} while (recvStatus < 0);
 							int amountOfTimesReceived = 1;
 
 
@@ -168,13 +172,9 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 							//Initialie the struct for tracking communication results
-							NetworkResults messageData;
-							messageData.prevBlockID = 0;
-							messageData.currentBlockID = 0;
-							messageData.bytesReceived = 0;
-							messageData.missingBytes = 0;
-							messageData.missingBlocks = 0;
-							messageData.disorganizedBytes = 0;
+							NetworkResults messageData; messageData.prevBlockID = 0; messageData.currentBlockID = 0;
+							messageData.bytesReceivedCount = 0; messageData.blocksReceivedCount = 0;  messageData.missingBytesCount = 0;
+							messageData.missingBlockCount = 0; messageData.disorganizedBlocksCount = 0; messageData.disorganizedBytesCount = 0;
 
 
 							//Deconstruct the message and get its properties
@@ -184,17 +184,13 @@ int start_server_protocol(int* tcpOrUdp)
 							int selectReturn = 0;
 							do
 							{
+
 								//Get the blocks ID and compare it to the previous one to see if any were missed
 								messageData.currentBlockID = getBlockID(messageBuffer);
-								messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
-								messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
 
 
-								//Find where the real message starts denoted by the letter 'G'
-								//char *ptr = NULL;
-								//ptr = strchr(messageBuffer, 'G');
-								//ptr++;
-								//strcpy(messageBuffer, ptr);	//DEBUG MIGHT NEED TO CHANGE THIS DEPENDING ON HOW RANDY SETS THE CLIENT UP
+								messageData.blocksReceivedCount = getBlockCount(messageData.receivedBlocks);
+								messageData.missingBytesCount = getBytesMissing(protocol.blockSize, messageBuffer);
 
 
 								//Clear the buffer and receive the next message if another one is still expected
@@ -217,23 +213,22 @@ int start_server_protocol(int* tcpOrUdp)
 							} while (recvStatus > 0);
 
 
-							//Package the results and send them off to the client and disconnect the socket
-							//packageResults(messageBuffer, 
-							//	messageData,
-							//	messageData.missingBlocks);
-
-
 							//Ensure the socket is still intact before sending the message
 							if (networkResult == SOCKET_TIMEOUT)
 							{
+								//Package the results and send them off to the client and disconnect the socket
+								packageResults(messageBuffer, messageData.missingBlockCount);
+								send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
+								packageResults(messageBuffer, messageData.disorganizedBlocksCount);
 								send(acceptedSocketConnection, messageBuffer, strlen(messageBuffer), 0);
 							}
 
 
 							//Report the server size details DEBUG REMOVE BEFORE SUBMISSION
 							printf("Amount of Bytes Sent From Client: %d\n", (int)(protocol.blockCount * protocol.blockSize));
-							printf("Amount of Bytes Received: %d\n", messageData.bytesReceived);
-							printf("Amount of Lost Blocks: %d\n", messageData.missingBlocks);
+							printf("Amount of Bytes Received: %d\n", messageData.bytesReceivedCount);
+							printf("Amount of Blocks Received: %d\n", messageData.bytesReceivedCount);
+							printf("Amount of Lost Blocks: %d\n", messageData.missingBlockCount);
 							printf("\n");
 						}
 					}
@@ -253,8 +248,10 @@ int start_server_protocol(int* tcpOrUdp)
 
 /*
 *  FUNCTION      : getBlockSize
-*  DESCRIPTION   : This method is used to DEBUG
+*  DESCRIPTION   : This method is used to get the block size from the message header,
+*					and convert it to a single decimal value
 *  PARAMETERS    : Function parameters are as follows
+*	char messageCopy[] : Copy of the message array
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
 long getBlockSize(char messageCopy[])
@@ -270,102 +267,154 @@ long getBlockSize(char messageCopy[])
 	long blockSize = convertHexToDecimal(messageProperties);
 	free(messageProperties);
 	return blockSize;
-}
+
+}//Done
 
 
 /*
 *  FUNCTION      : convertHexToDecimal
-*  DESCRIPTION   : This method is used to DEBUG
+*  DESCRIPTION   : This method is used to convert a hexadecimal string fo characters into a single integer of equivilent value
 *  PARAMETERS    : Function parameters are as follows
+*	char messageProperties : Pointer to the string containing the message proerties
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
 int convertHexToDecimal(char* messageProperties)
 {
 	int convertedHex = 0;
-	int val = 0;
-	int expectingBytes = 0;
-	int len = strlen(messageProperties) - 1;
-	for (int index = 0; index < 4; index++)
-	{
-		if (messageProperties[index] >= '0' && messageProperties[index] <= '9')
-		{
-			val = messageProperties[index] - 48;
-		}
-		else if (messageProperties[index] >= 'a' && messageProperties[index] <= 'f')
-		{
-			val = messageProperties[index] - 97 + 10;
-		}
-		else if (messageProperties[index] >= 'A' && messageProperties[index] <= 'F')
-		{
-			val = messageProperties[index] - 65 + 10;
-		}
-
-		expectingBytes += val * (long)(pow(16, len));
-		len--;
-	}
-
+	sscanf(messageProperties, "%x", &convertedHex);
 	return (long)convertedHex;
-}
+
+}//Done
 
 
 /*
 *  FUNCTION      : getNumberOfBlocks
-*  DESCRIPTION   : This method is used to DEBUG
+*  DESCRIPTION   : This method is used to get the number of expected blocks from the message header, and convert them from
+*				   hex to decimal form
 *  PARAMETERS    : Function parameters are as follows
+*	char messageCopy[] : Copy of the message array
 *  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
 */
 int getNumberOfBlocks(char messageCopy[])
 {
-	char blockCountArray[MESSAGE_BUFFER_SIZE_10000] = { "" };
-	char *ptr = NULL;
-	ptr = messageCopy;								//Point to the beginning of the copied message
-	ptr += BLOCK_SIZE_OFFSET;						//Offset the index by 4 (block size string will always be the first 4 chars in the message)
+	char blockCountArray[MESSAGE_PROPERTY_SIZE] = { "" };
 
-
-	//Scan the remainder of the string until the letter 'G' is encountered
-	for (int i = 0; ptr[i] != 'G'; i++)
+	//Copy each element of the block count string
+	for (int i = 0; i <4; i++)
 	{
+		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];	//Block size will always be from index 4 to 7
 
-		//Copy each element of the block count string
-		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];
 	}
+
+	//Convert the hex string representing the block count, and return the result
+	int blockCount = convertHexToDecimal(blockCountArray);
+	return blockCount;
+
+}//Done
+
+
+/*
+*  FUNCTION      : getBlockID
+*  DESCRIPTION   : This method is used to find the block ID in the message header, and convert the hex value to a decimal form
+*  PARAMETERS    : Function parameters are as follows
+*	char messageCopy[] : Copy of the message array
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
+int getBlockID(char messageCopy[])
+{
+	char blockIDSubSet[MESSAGE_PROPERTY_SIZE] = { "" };
+
+	//Copy each element of the block count string
+	for (int i = 0; i < 4; i++)
+	{
+		blockIDSubSet[i] = messageCopy[i + BLOCK_ID_OFFSET];	//Block ID will always be from index 8 - 11
+
+	}
+
+	//Convert the hex string representing the block ID, and return the result
+	int blockID = convertHexToDecimal(blockIDSubSet);
+	return blockID;
+
+}//Done
+
+
+/*
+*  FUNCTION      : getBlocksReceived
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows
+*	char messageCopy[] : Copy of the message array
+*	DEBUG
+*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*/
+int getBlocksReceived(char messageCopy[], NetworkResults blockCounter)
+{
 	int blockCount = 0;
-	sscanf(blockCount, "%d", blockCountArray);
+
+
+
 	return blockCount;
 }
 
 
 /*
-*  FUNCTION      : getBlockID
-*  DESCRIPTION   : This method is used to DEBUG
-*  PARAMETERS    : Function parameters are as follows
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*  FUNCTION      : checkForMissedBlock
+*  DESCRIPTION   : This method is used to check if the block's ID has been added to the list of blocks that are missing
+*  PARAMETERS    : Function parameters are as follows,
+*	int currentBlockID		: Block ID of the most recent block
+*	int prevBlockID			: ID of the previously received block
+*	int receivedBlockList[] : Array containing the ID's of all the blocks that have been recieved
+*	int missingBlocks[]			: Array containing the ID's of all the blocks listed as missing
+*	int disorganizedBlockList[] : Array containing the ID's of all the blocks that have been labled as disorganized
+*  RETURNS       : void : The function has no return
 */
-int getBlockID(char messageCopy[])
+void checkForMissedBlock(int currentBlockID, int prevBlockID, int receivedBlockList[], int missingBlockList[], int disorganizedBlockList[])
 {
-	int blockID = 0;
+	int missingBlocks = 0;
+	if (currentBlockID == prevBlockID + 1)
+	{
+		addBlockToRecievedList(currentBlockID, receivedBlockList);
 
+	}	//Sequential block transmission was accurate
+	else//BlockID did not match the expected ID
+	{
 
-	//Jump to the blockID identifier in the message
+		//Check if the block is labeled as missing, and add it to the list if found
+		bool missingBlock = isBlockMissing(currentBlockID, missingBlockList);
+		if (missingBlock == true)
+		{
 
+			//Block was listed as missing; add to disorganized list
+			addBlockTodisorganizedList(currentBlockID, disorganizedBlockList);
+		}
+	}
 
-	return blockID;
-}
+}//Done
 
 
 /*
-*  FUNCTION      : checkForMissedBlock
-*  DESCRIPTION   : This method is used to DEBUG
-*  PARAMETERS    : Function parameters are as follows
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*  FUNCTION      : isBlockMissing
+*  DESCRIPTION   : This method is used to check if the block's ID has been added to the list of missing blocks, if true, 
+*				   remove the ID from the list and return true
+*  PARAMETERS    : Function parameters are as follows,
+*	int currentBlockID  : Block ID of the most recent block
+*	int missingBlocks[] : Array containing the ID's of all the blocks listed as missing
+*  RETURNS       : bool : Returns true if the block's ID was found in the list
 */
-int  checkForMissedBlock(int currentBlockID, int prevBlockID)
+bool  isBlockMissing(int currentBlockID, int missingBlocks[])
 {
-	int missingBlocks = 0;
-	if (currentBlockID != prevBlockID + 1)
+	bool missingBlockFound = false;
+
+
+	//Check if the new block is an old block that was missed, 
+	// or if the block was sent too early
+	for (int index = 0; index < strlen(missingBlocks); index++)
 	{
-		//A block was missed, so increment the counter
-		missingBlocks++;
+		if (missingBlocks[index]== currentBlockID)
+		{
+			missingBlockFound = true;	//Block was found
+			missingBlocks[index] = 0;	//Remove the blockID from the list of missing ID's
+		}
+
 	}
 
 	return missingBlocks;
@@ -373,10 +422,28 @@ int  checkForMissedBlock(int currentBlockID, int prevBlockID)
 
 
 /*
+*  FUNCTION      : addBlockTodisorganizedList
+*  DESCRIPTION   : This method is used to check if the block's ID has been added to the list of blocks that came in after they were labeled as missing;
+*					In other words, they will be labeled as disorganized, and removed from the missingBlockList
+*  PARAMETERS    : Function parameters are as follows,
+*	int currentBlockID  : Block ID of the most recent block
+*	int missingBlocks[] : Array containing the ID's of all the blocks listed as missing
+*  RETURNS       : bool : Returns true if the block's ID was found in the list
+*/
+void addBlockTodisorganizedList(int blockID, int disorganizedList[])
+{
+	disorganizedList
+}
+
+
+/*
 *  FUNCTION      : getBytesMissing
-*  DESCRIPTION   : This method is used to DEBUG
-*  PARAMETERS    : Function parameters are as follows
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*  DESCRIPTION   : This function is used to get the number of bytes missing from the message.
+*				   The function compares the total message bytes count against the expected block size
+*  PARAMETERS    : Function parameters are as follows,
+*	int blockSize		: Block size indicator (1000 to 10,000)
+*	char* messageBuffer : Original message passed from the client
+*  RETURNS       : int : Returns an integer indicating the number of bytes lost during transmission
 */
 int getBytesMissing(int blockSize, char* messageBuffer)
 {
@@ -391,4 +458,20 @@ int getBytesMissing(int blockSize, char* messageBuffer)
 	}
 
 	return lostBytes;
-}
+
+}//Done 
+
+
+/*
+*  FUNCTION      : packageResults
+*  DESCRIPTION   : This method is used to DEBUG
+*  PARAMETERS    : Function parameters are as follows,
+*	char messagBuffer[] : Outbounnd message container
+*	int packagedValue   : Int value to be added to the message
+*  RETURNS       : void : Function has no return
+*/
+void packageResults(char messagBuffer[], int packagedValue)
+{
+	sprintf(messagBuffer, "%d", packagedValue);
+
+}//Done

@@ -256,7 +256,7 @@ int validateBlockSize(char* blockSizeString)
 int validateNumOfBlocks(char* blockCount)
 {
 	int blocksValid = convertCharToInt(blockCount);
-	if (blocksValid <= (1073741824 / 1000))			//Bytes per gigabyte
+	if (blocksValid <= 10000)
 	{
 		return blocksValid;							//Valid block count
 	}

@@ -55,43 +55,43 @@ int setErrorState(int errorState)
 	switch (errorState)
 	{
 		case SOCKET_CREATION_ERROR:
-			perror("[ERROR]: Could not create socket");
+			printf("[ERROR]: Could not create socket");
 			break;
 
 		case SOCKET_BIND_ERROR:
-			perror("[ERROR]: Could not bind to socket");
+			printf("[ERROR]: Could not bind to socket");
 			break;
 
 		case SOCKET_LISTEN_ERROR:
-			perror("[ERROR]: Could not listen to the socket");
+			printf("[ERROR]: Could not listen to the socket");
 			break;
 
 		case SOCKET_CONNECTION_ERROR:
-			perror("[ERROR]: Could not accept new connection");
+			printf("[ERROR]: Could not accept new connection");
 			break;
 
 		case SOCKET_SEND_ERROR:
-			perror("[ERROR]: Could not send message");
+			printf("[ERROR]: Could not send message");
 			break;
 
 		case SOCKET_RECEIVE_ERROR:
-			perror("[ERROR]: Could not receive message");
+			printf("[ERROR]: Could not receive message");
 			break;
 
 		case SOCKET_HOST_ERROR:
-			perror("[ERROR]: Could get host by address");
+			printf("[ERROR]: Could get host by address");
 			break;
 
 		case SOCKET_TIMEOUT:
-			perror("[ERROR]: Socket connection timed out");
+			printf("[ERROR]: Socket connection timed out");
 			break;
 
 		case SOCKET_SETTINGS_ERROR:
-			perror("[ERROR]: Socket could not be set to non-blocking with a time out");
+			printf("[ERROR]: Socket could not be set to non-blocking with a time out");
 			break;
 
 		default:
-			perror("[ERROR]: Unidentified error has occurred");
+			printf("[ERROR]: Unidentified error has occurred");
 			break;
 
 	}

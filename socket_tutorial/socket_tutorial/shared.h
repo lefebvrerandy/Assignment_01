@@ -88,6 +88,7 @@ typedef int SOCKET;
 
 //Message array index locations
 #define MESSAGE_PROPERTY_SIZE	255
+#define BLOCK_ID_OFFSET			8
 #define BLOCK_SIZE_LENGTH		4
 #define BLOCK_SIZE_OFFSET		4
 #define BLOCK_NUM_INDEX			4
