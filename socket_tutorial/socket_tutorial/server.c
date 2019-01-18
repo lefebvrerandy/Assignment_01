@@ -187,6 +187,8 @@ int start_server_protocol(int* tcpOrUdp)
 
 								//Get the blocks ID and compare it to the previous one to see if any were missed
 								messageData.currentBlockID = getBlockID(messageBuffer);
+								messageData.missingBlocks += checkForMissedBlock(messageData.currentBlockID, messageData.prevBlockID);
+								messageData.missingBytes = getBytesMissing(protocol.blockSize, messageBuffer);
 
 
 								messageData.blocksReceivedCount = getBlockCount(messageData.receivedBlocks);
@@ -205,6 +207,7 @@ int start_server_protocol(int* tcpOrUdp)
 								}
 
 								//recv() call returned an error indicating the connection timedout
+				// Double check this else
 								else
 								{
 									networkResult = setErrorState(SOCKET_TIMEOUT);
@@ -258,10 +261,13 @@ long getBlockSize(char messageCopy[])
 {
 	//Get the block size sub string from the message
 	char* messageProperties = malloc(sizeof(char) * MESSAGE_PROPERTY_SIZE);
-	for (int index = 0; index < BLOCK_SIZE_LENGTH; index++)								
+	int index = 0;
+	for (index = 0; index < BLOCK_SIZE_LENGTH; index++)								
 	{
 		messageProperties[index] = messageCopy[index];				//String stating the block size will never be larger than 4 chars (ie. first 4 chars of the array)
 	}
+	messageProperties[index] = '\0';
+
 
 	//Get the decimal value from the string 
 	long blockSize = convertHexToDecimal(messageProperties);
@@ -299,15 +305,22 @@ int getNumberOfBlocks(char messageCopy[])
 {
 	char blockCountArray[MESSAGE_PROPERTY_SIZE] = { "" };
 
-	//Copy each element of the block count string
-	for (int i = 0; i <4; i++)
+
+	//Scan the remainder of the string until the letter 'G' is encountered
+	int i = BLOCK_SIZE_OFFSET;
+	int j = 0;
+	for (i = BLOCK_SIZE_OFFSET; i < 8; i++)
 	{
 		blockCountArray[i] = messageCopy[i + BLOCK_SIZE_OFFSET];	//Block size will always be from index 4 to 7
 
+		//Copy each element of the block count string
+		blockCountArray[j] = messageCopy[i];
+		j++;
 	}
+	blockCountArray[j] = '\0';
 
-	//Convert the hex string representing the block count, and return the result
-	int blockCount = convertHexToDecimal(blockCountArray);
+	int blockCount = 0;
+	blockCount = convertHexToDecimal(blockCountArray);
 	return blockCount;
 
 }//Done
