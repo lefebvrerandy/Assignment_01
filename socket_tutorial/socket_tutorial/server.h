@@ -21,16 +21,10 @@ typedef struct {
 
 //Struct used to track the networks performance
 typedef struct {
-	int prevBlockID;
-	int currentBlockID;
-	int bytesReceivedCount;
 	int blocksReceivedCount;
-	int missingBytesCount;
 	int missingBlockCount;
-	int disorganizedBytesCount;
 	int disorganizedBlocksCount;
-	int receivedBlocks[MESSAGE_BUFFER_SIZE_10000];
-	int missedBlocks[MESSAGE_BUFFER_SIZE_10000];
+	char blocksReceivedList[MESSAGE_BUFFER_SIZE_10000];
 
 }NetworkResults;
 
@@ -38,10 +32,16 @@ typedef struct {
 //Function prototypes
 int start_server();
 int start_server_protocol(int* tcpOrUdp);
+void printServerProperties(void);
 long getBlockSize(char messageCopy[]);
 int convertHexToDecimal(char* messageProperties);
 int getNumberOfBlocks(char messageCopy[]);
 int getBlockID(char messageCopy[]);
-int checkForMissedBlock(int currentBlockID, int prevBlockID);
+void saveBlockID(char blockIDList[], const int blockID);
+int checkForMissedBlocks(char receivedBlockList[]);
 int getBytesMissing(int blockSize, char* messageBuffer);
 void packageResults(char messagBuffer[], int packagedValue);
+struct sockaddr_in intitializeSocket(void);
+int getBlockCount(char blockIDList[]);
+void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, const int disorganizedBlockCount);
+int checkForDisorganizedBlocks(char blockIDList[]);

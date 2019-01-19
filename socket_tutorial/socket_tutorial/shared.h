@@ -57,7 +57,8 @@ typedef int SOCKET;
 #define MESSAGE_BUFFER_SIZE_1000	1000
 #define MAX_ARGUMENT_LENGTH			15
 #define SWITCH_OPTIONS				5
-#define ERROR_RETURN				-1
+#define SUCCESS						1
+#define ERROR_RETURN				0
 
 
 //Network properties
@@ -89,6 +90,7 @@ typedef int SOCKET;
 //Message array index locations
 #define MESSAGE_PROPERTY_SIZE	255
 #define BLOCK_ID_OFFSET			8
+#define BLOCK_ID_LENGTH			5
 #define BLOCK_SIZE_LENGTH		4
 #define BLOCK_SIZE_OFFSET		4
 #define BLOCK_NUM_INDEX			4
@@ -116,4 +118,4 @@ int validateAddress(char address[]);
 int validateBlockSize(char* blockSizeString);
 int validateNumOfBlocks(char* string);
 int validatePort(char* string);
-
+void printError(int errorCode);

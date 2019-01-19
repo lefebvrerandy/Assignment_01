@@ -86,7 +86,6 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 			//Receive message from server about the missed data
-
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
 			int proportionMissing = convertCharToInt(messageBuffer);
@@ -96,16 +95,19 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
 			int disordered = convertCharToInt(messageBuffer);
-
-
 			int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
-
-
 			printResults(blockSize, numberOfBlocks, (int)stopwatch.elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
 			free(messageBuffer);
 		}
 	}
-	closesocket(openSocketHandle);
+
+
+	//Close the sockets
+	#if defined _WIN32
+		closesocket(openSocketHandle);
+	#elif defined __linux__
+		close(openSocketHandle);
+	#endif
 	return clientReturn;
 }
 
@@ -136,7 +138,7 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
 	
-	char* returnArray = malloc(sizeof(char) * bufferSize);
+	char* returnArray = malloc(sizeof(char) * (bufferSize + 1));
 	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
 
 	//Set the message buffer's properties
@@ -364,9 +366,9 @@ void convertDecToHex(int decimal, char* hexaNum)
 	{
 		remainder = quotient % 16;
 		if (remainder < 10)
-			hexaNumBackwards[j++] = 48 + remainder;
+			hexaNumBackwards[j++] = (char)(48 + remainder);
 		else
-			hexaNumBackwards[j++] = 55 + remainder;
+			hexaNumBackwards[j++] = (char)(55 + remainder);
 		quotient = quotient / 16;
 	}
 
