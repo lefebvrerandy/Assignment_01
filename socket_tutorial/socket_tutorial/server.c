@@ -77,7 +77,7 @@ int start_server_protocol(int* tcpOrUdp)
 {
 	
 	struct timeval timeout = {				//Tracks socket timeout
-	.tv_sec = 5,
+	.tv_sec = 2,							//2 second timeout
 	.tv_usec = 0
 	};
 
@@ -85,7 +85,7 @@ int start_server_protocol(int* tcpOrUdp)
 		.blocksReceivedCount = 0,
 		.missingBlockCount = 0,
 		.disorganizedBlocksCount = 0,
-		.blocksReceivedList = {'\0'}
+		.blocksReceivedList = {0}
 	};
 
 	MessageProperties protocol = {			//Tracks message properties
@@ -161,11 +161,12 @@ int start_server_protocol(int* tcpOrUdp)
 		//Deconstruct the message and get its properties
 		protocol.blockSize = getBlockSize(messageBuffer);
 		protocol.blockCount = getNumberOfBlocks(messageBuffer);
+		int freeIndex = 0;
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
-			saveBlockID(messageData.blocksReceivedList, getBlockID(messageBuffer));
+			saveBlockID(messageData.blocksReceivedList, getBlockID(messageBuffer), freeIndex);
 
 			//Clear the buffer and receive the next message if another one is still expected
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
@@ -175,11 +176,13 @@ int start_server_protocol(int* tcpOrUdp)
 				break;
 			}
 			recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+			freeIndex++;
 		}
 
 		//Examine the data, and report the results to the client
 		messageData.blocksReceivedCount = getBlockCount(messageData.blocksReceivedList);
 		messageData.disorganizedBlocksCount = checkForDisorganizedBlocks(messageData.blocksReceivedList);
+		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);
 		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList);
 
 
@@ -200,17 +203,31 @@ int start_server_protocol(int* tcpOrUdp)
 	return SUCCESS;
 }
 
-//DEBUG 
-int getBlockCount(char blockIDList[])
+//DEBUG
+//Comparison function taken from
+//https://www.tutorialspoint.com/c_standard_library/c_function_qsort.htm
+int cmpfunc(const void * a, const void * b) 
 {
-	int numberOfChars = strlen(blockIDList);	//Get the byte size of the elements in the array (each char = 1 byte)
-	numberOfChars /= sizeof(int);				//Return will be an int which is 4 bytes long
+	return (*(int*)a - *(int*)b);
+}
+
+//DEBUG 
+int getBlockCount(int blockIDList[])
+{
+	int numberOfChars = 0;
+	for (unsigned int index = 0; index < MESSAGE_BUFFER_SIZE_10000; index++)
+	{
+		if (blockIDList[index] != 0)
+		{
+			numberOfChars++;
+		}
+	}
 	return numberOfChars;
 }
 
 
 //DEBUG
-int checkForDisorganizedBlocks(char blockIDList[])
+int checkForDisorganizedBlocks(int blockIDList[])
 {
 
 	/////////////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +255,6 @@ int checkForDisorganizedBlocks(char blockIDList[])
 	//	
 	/////////////////////////////////////////////////////////////////////////////////////
 	
-	size_t arraySize = strlen(blockIDList);
 	unsigned int index;
 	int numDisorganizedBlocks = 0;
 	int elemOne = 0;
@@ -248,15 +264,24 @@ int checkForDisorganizedBlocks(char blockIDList[])
 
 	//Only enter the array if there is at least two elements
 	//Default disorganizedCount to 0 when only 1 block received
-	for(index = 0; index < (arraySize - 1); index++)
+	for(index = 0; index < (MESSAGE_BUFFER_SIZE_10000 - 1); index++)
 	{
-		elemOne = blockIDList[index] - '0';
-		elemTwo = blockIDList[++index] - '0';			//Get the decimal value of each char
-		if (elemTwo != (elemOne + 1))
+		if (blockIDList[index] != 0)
 		{
-			numDisorganizedBlocks++;
+			elemOne = blockIDList[index];
 		}
-		index--;
+		if (blockIDList[++index] != 0)
+		{
+			elemTwo = blockIDList[++index];
+		}
+		if ((elemOne != 0) && (elemTwo != 0))
+		{
+			if (elemTwo != (elemOne + 1))
+			{
+				numDisorganizedBlocks++;
+			}
+			index--;
+		}
 	}
 
 	return numDisorganizedBlocks;
@@ -270,14 +295,12 @@ int countDigits(const int arg)
 	return snprintf(NULL, 0, "%d", arg) - (arg < 0);
 }
 
+
 //DEBUG
-void saveBlockID(char blockIDList[], const int blockID)
+void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
 {
 	int digitLength = countDigits(blockID);
-	char* blockIDString = malloc(sizeof(char) * (size_t)(digitLength + 1));
-	sprintf(blockIDString, "%d", blockID);
-	strcat(blockIDList, blockIDString);
-	free(blockIDString);
+	blockIDList[freeIndex] = blockID;
 }
 
 
@@ -476,24 +499,6 @@ int getBlockID(char messageBuffer[])
 
 
 //DEBUG
-int compareChars(const void *first, const void *second)
-{
-	int greaterChar = (strcmp(first, second));
-	if(greaterChar > 0)			//First is greater than second
-	{
-		return greaterChar;
-	}
-	else if (greaterChar < 0)	//First is less than second
-	{
-		return greaterChar;
-	}
-	else						//The two chars were identical
-	{
-		return greaterChar;
-	}
-}
-
-//DEBUG
 int getDifference(const int elemOne, const int elemTwo)
 {
 	return abs(elemOne - elemTwo);
@@ -509,19 +514,15 @@ int getDifference(const int elemOne, const int elemTwo)
 *	int receivedBlockList[] : Array containing the ID's of all the blocks that have been received
 *  RETURNS       : void : The function has no return
 */
-int checkForMissedBlocks(char receivedBlockList[])
+int checkForMissedBlocks(int receivedBlockList[])
 {
-	size_t arraySize = strlen(receivedBlockList);
 	int missingBlocks = 0;
 	int elemOne = 0;
 	int elemTwo = 0;
-	
-	//Sort the block list and check if any values are missing
-	qsort(receivedBlockList, strlen(receivedBlockList), sizeof(char), compareChars);
-	for (unsigned int index = 0; index < (arraySize - 1); index++)
+	for (unsigned int index = 0; index < (MESSAGE_BUFFER_SIZE_10000 - 1); index++)
 	{
-		elemOne = receivedBlockList[index] - '0';
-		elemTwo = receivedBlockList[++index] - '0';				//Get the decimal value of each char
+		elemOne = receivedBlockList[index];
+		elemTwo = receivedBlockList[++index];
 		missingBlocks += getDifference(elemOne, elemTwo) - 1;	//Difference - 1 shows the number of missing ID's between each element (eg: 10 - 7 = 3 - 1 = 2 missing ID's (8 & 9))
 		index--;												//Restore index to value before elemTwo was calculated
 	}

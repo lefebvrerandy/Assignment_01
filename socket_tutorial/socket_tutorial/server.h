@@ -24,7 +24,7 @@ typedef struct {
 	int blocksReceivedCount;
 	int missingBlockCount;
 	int disorganizedBlocksCount;
-	char blocksReceivedList[MESSAGE_BUFFER_SIZE_10000];
+	int blocksReceivedList[MESSAGE_BUFFER_SIZE_10000];
 
 }NetworkResults;
 
@@ -37,11 +37,12 @@ long getBlockSize(char messageCopy[]);
 int convertHexToDecimal(char* messageProperties);
 int getNumberOfBlocks(char messageCopy[]);
 int getBlockID(char messageCopy[]);
-void saveBlockID(char blockIDList[], const int blockID);
-int checkForMissedBlocks(char receivedBlockList[]);
+void saveBlockID(int blockIDList[], const int blockID, const int occupiedIndex);
+int checkForMissedBlocks(int receivedBlockList[]);
 int getBytesMissing(int blockSize, char* messageBuffer);
 void packageResults(char messagBuffer[], int packagedValue);
 struct sockaddr_in intitializeSocket(void);
-int getBlockCount(char blockIDList[]);
+int getBlockCount(int blockIDList[]);
 void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, const int disorganizedBlockCount);
-int checkForDisorganizedBlocks(char blockIDList[]);
+int checkForDisorganizedBlocks(int blockIDList[]);
+int cmpfunc(const void * a, const void * b);
