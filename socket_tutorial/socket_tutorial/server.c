@@ -77,8 +77,8 @@ int start_server_protocol(int* tcpOrUdp)
 {
 	
 	struct timeval timeout = {				//Tracks socket timeout
-	.tv_sec = 2,							//2 second timeout
-	.tv_usec = 0
+		.tv_sec = 12,						//12 second timeout
+		.tv_usec = 0
 	};
 
 	NetworkResults messageData = {			//Tracks the networks status based on the 
@@ -173,9 +173,18 @@ int start_server_protocol(int* tcpOrUdp)
 			int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
 			if (!(selectResult > 0))
 			{
-				break;
+
+				//Make one final recv() call to ensure the socket is indeed empty
+				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);	
+				if (!(recvStatus > 0))
+				{
+					break;
+				}
 			}
-			recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+			else
+			{
+				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+			}
 			freeIndex++;
 		}
 
