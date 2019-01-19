@@ -5,13 +5,13 @@
 		Feel free to add a second line -tabbed in with a possible FIX if any
 
 // Client
-- (client.c) (convertDecToHex) (Contains magic numbers)
+DONE	- (client.c) (convertDecToHex) (Contains magic numbers)
 
 // Server
 - {1}(server.c) (start_server()) (We need to uncomment and debug UDP to make sure it connects properly to UDP)
 -	[1](server.c) (start_server()) (Currently one of the threads will be run and it will never join since the second thread is in a wait loop with (accept))
 - (server.c) (start_server()) (server has a DEBUG sleep(10000) and will need to be taken out)
-- (server.c) (convertHexToDecimal()) (Contains magic numbers)
+DONE	- (server.c) (convertHexToDecimal()) (Contains magic numbers)
 
 // Windows Specific
 -

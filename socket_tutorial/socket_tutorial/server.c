@@ -457,7 +457,7 @@ int getNumberOfBlocks(char messageBuffer[])
 	//Scan the remainder of the string until the letter 'G' is encountered
 	int i = BLOCK_SIZE_OFFSET;
 	int j = 0;
-	for (i = BLOCK_SIZE_OFFSET; i < 8; i++)
+	for (i = BLOCK_SIZE_OFFSET; i < (BLOCK_SIZE_OFFSET + BLOCK_SIZE_LENGTH); i++)
 	{
 		blockCountArray[i] = messageBuffer[i + BLOCK_SIZE_OFFSET];	//Block size will always be from index 4 to 7
 
@@ -486,7 +486,7 @@ int getBlockID(char messageBuffer[])
 	char blockIDSubSet[MESSAGE_PROPERTY_SIZE] = { "" };
 
 	//Copy each element of the block count string
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < BLOCK_SIZE_LENGTH; i++)
 	{
 		blockIDSubSet[i] = messageBuffer[i + BLOCK_ID_OFFSET];	//Block ID will always be from index 8 - 11
 

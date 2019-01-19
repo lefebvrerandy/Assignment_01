@@ -233,18 +233,18 @@ void setMessageProperties(char messageProperties[], int bufferSize, int numberOf
 void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOffset)
 {
 	int index = 0;
-	int elementValue = 48;											//ASCII 48 is '0'
+	int elementValue = ASCII_VALUE_0;											//ASCII 48 is '0'
 	for (index = messageIndexOffset; index < bufferSize; index++)	//Message buffer size can range from 1,000 - 10,000 bytes
 	{
-		if (elementValue < 58)										//ASCII 58 is the char after '9'
+		if (elementValue < ASCII_VALUE_9)										//ASCII 58 is the char after '9'
 		{
 			messageBuffer[index] = (char)elementValue;				//Fill the message buffer with the elements value from 0 - 9
 			elementValue++;
 		}
 
-		if (elementValue == 58)
+		if (elementValue == ASCII_VALUE_9)
 		{
-			elementValue = 48;										//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
+			elementValue = ASCII_VALUE_0;										//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
 
@@ -342,10 +342,11 @@ void printResults(int size, int sent, int time, int speed, int missing, int diso
 
 /*
 *  FUNCTION      : convertDecToHex
-*  DESCRIPTION   : 
+*  DESCRIPTION   : In this function, we will take a decimal number and convert it to a hex number
+*					in the format of XXXX. It must be 4 characters long in order to work with our protocol.
 *  PARAMETERS    : parameters are as follows,
-*	int decimal	  : 
-*	char* hexaNum : 
+*	int decimal	  : The decimal number to convert
+*	char* hexaNum : The Hexa char array that will contain the 4 character long hex number
 *  RETURNS       : void
 */
 void convertDecToHex(int decimal, char* hexaNum)
@@ -355,18 +356,17 @@ void convertDecToHex(int decimal, char* hexaNum)
 	long remainder;
 	int i = 0;
 	int j = 0;
-	char hexaNumBackwards[100] = { "" };
+	char hexaNumBackwards[MAX_FORMAT_SIZE + 1] = { "" };
 
 
+	// The conversion of turning our decimal number into a hex number
 	decimalNum = (long)decimal;
-
 	quotient = decimalNum;
-
 	while (quotient != 0)
 	{
 		remainder = quotient % 16;
 		if (remainder < 10)
-			hexaNumBackwards[j++] = (char)(48 + remainder);
+			hexaNumBackwards[j++] = ASCII_VALUE_0 + remainder;
 		else
 			hexaNumBackwards[j++] = (char)(55 + remainder);
 		quotient = quotient / 16;
@@ -379,13 +379,17 @@ void convertDecToHex(int decimal, char* hexaNum)
 		l++;
 	}
 
-	char buffer[5] = { "" };
-	if (strlen(hexaNumBackwards) < 4)
+
+	// Add any 0's at the beginning of the string to create the format of
+	// XXXX. We need to make sure the number returned is 4 numbers long to 
+	// follow our protocol
+	char buffer[MAX_FORMAT_SIZE + 1] = { "" };
+	if (strlen(hexaNumBackwards) < MAX_FORMAT_SIZE)
 	{
 
 		int strLength = 0;
 		strLength = strlen(hexaNumBackwards);
-		for (int i = strLength; i < 4; i++)
+		for (int i = strLength; i < MAX_FORMAT_SIZE; i++)
 		{
 			strcat(buffer, "0");
 		}
