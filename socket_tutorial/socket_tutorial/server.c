@@ -357,7 +357,12 @@ void printServerProperties(void)
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : printError
+*  DESCRIPTION   : This function is used to print an error to the console window
+*  PARAMETERS    : int errorCode : Int representing the error to print
+*  RETURNS       : void : Function has no return
+*/
 void printError(int errorCode)
 {
 	switch (errorCode)

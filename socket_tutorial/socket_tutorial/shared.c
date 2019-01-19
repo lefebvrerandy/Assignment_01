@@ -45,62 +45,6 @@ void sendMessage(SOCKET connectedSocket, char messageBuffer[])
 
 
 /*
-*  FUNCTION      : setErrorState
-*  DESCRIPTION   : This function is used to print an error to the console window, and set the return to a negative indicating an error has occurred during execution
-*  PARAMETERS    : This function takes no arguments
-*  RETURNS       : int : Returns -1 as defined by the constant ERROR_RETURN
-*/
-int setErrorState(int errorState)
-{
-	switch (errorState)
-	{
-		case SOCKET_CREATION_ERROR:
-			printf("[ERROR]: Could not create socket");
-			break;
-
-		case SOCKET_BIND_ERROR:
-			printf("[ERROR]: Could not bind to socket");
-			break;
-
-		case SOCKET_LISTEN_ERROR:
-			printf("[ERROR]: Could not listen to the socket");
-			break;
-
-		case SOCKET_CONNECTION_ERROR:
-			printf("[ERROR]: Could not accept new connection");
-			break;
-
-		case SOCKET_SEND_ERROR:
-			printf("[ERROR]: Could not send message");
-			break;
-
-		case SOCKET_RECEIVE_ERROR:
-			printf("[ERROR]: Could not receive message");
-			break;
-
-		case SOCKET_HOST_ERROR:
-			printf("[ERROR]: Could get host by address");
-			break;
-
-		case SOCKET_TIMEOUT:
-			printf("[ERROR]: Socket connection timed out");
-			break;
-
-		case SOCKET_SETTINGS_ERROR:
-			printf("[ERROR]: Socket could not be set to non-blocking with a time out");
-			break;
-
-		default:
-			printf("[ERROR]: Unidentified error has occurred");
-			break;
-
-	}
-
-	return ERROR_RETURN;
-}//Done
-
-
-/*
 *  FUNCTION      : convertCharToInt
 *  DESCRIPTION   : This function is used to convert characters to an integer
 *  PARAMETERS    : char* stringToConvert : The character string that will be converted to its integer counterpart

@@ -22,84 +22,84 @@
 */
 int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 {
-
-	int clientReturn = 0;											//Denotes if the function completed it's operation successfully 
 	struct sockaddr_in socketAddress;								//Local address struct
 	memset((void*)&socketAddress, 0, sizeof(socketAddress));		//Clear the socket struct before initialization
 
 
-	//Stage 1A : Setup the client's address struct
+	//Stage 1: Setup the client's address struct
 	socketAddress.sin_family = AF_INET;											
 	socketAddress.sin_addr.s_addr = inet_addr(storedData[CLA_IP_ADDRESS]);
 	socketAddress.sin_port = htons((u_short)(storedData[CLA_PORT_NUMBER]));
 
 
-	//Host data has been retried and set, proceed to open the socket and run the message loop
+	//Stage 2: Host data has been retried and set, proceed to open the socket
 	SOCKET openSocketHandle = createSocket(AF_INET, stream_or_datagram, tcp_or_udp);
-	if (openSocketHandle == INVALID_SOCKET)
+	if (!(openSocketHandle > ERROR_RETURN))
 	{
-		clientReturn = setErrorState(SOCKET_CREATION_ERROR);
+		printError(SOCKET_CREATION_ERROR);
+		return  SOCKET_CREATION_ERROR; 
 	}
-	else
+
+
+	//Stage 3: Connect to the server
+	int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
+	if (!(boundSocketHandle > SOCKET_ERROR))
 	{
-
-		//Connect to the server
-		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
-		if (boundSocketHandle == SOCKET_ERROR)
-		{
-			clientReturn = setErrorState(SOCKET_CONNECTION_ERROR);
-		}
-		else
-		{
-
-			//Convert the CLA's and allocate space for the message buffer
-			int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
-			int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
-			int totalBytes = blockSize * numberOfBlocks;
-			char* messageBuffer;
-
-
-			#if defined _WIN32
-			Timer stopwatch;
-			stopwatch.startTime = GetTickCount();				//Start the Windows timer
-
-			#elif defined __linux__
-			startTime = stopWatch();							//Start the UNIX timer
-
-			#endif
-			int currentblockCount = 0;
-			do		
-			{
-				messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
-				sendMessage(openSocketHandle, messageBuffer);	//Send the blocks across the network
-				currentblockCount++;
-			} while (currentblockCount < numberOfBlocks);
-
-			#if defined _WIN32
-			stopwatch.endTime = GetTickCount();					//Stop the Windows timer
-
-			#elif defined __linux__
-			endTime = stopWatch();								//Stop the UNIX timer
-
-			#endif
-			stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
-
-
-			//Receive message from server about the missed data
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
-			int proportionMissing = convertCharToInt(messageBuffer);
-
-
-			//Receive message from server about the disordered data from the last transmission
-			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-			recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
-			int disordered = convertCharToInt(messageBuffer);
-			int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
-			printResults(blockSize, numberOfBlocks, (int)stopwatch.elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
-			free(messageBuffer);
-		}
+		printError(SOCKET_CONNECTION_ERROR);
+		return SOCKET_CONNECTION_ERROR;
 	}
+
+
+	//Stage 4: Convert the CLA's and allocate space for the message buffer
+	int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
+	int blockSize = convertCharToInt(storedData[CLA_BUFFER_SIZE]);
+	int totalBytes = blockSize * numberOfBlocks;
+	char* messageBuffer;
+
+
+	//Stage 5: Start the message loop
+	#if defined _WIN32
+	Timer stopwatch;
+	stopwatch.startTime = GetTickCount();				//Start the Windows timer
+
+	#elif defined __linux__
+	startTime = stopWatch();							//Start the UNIX timer
+
+	#endif
+	int currentblockCount = 0;
+	do		
+	{
+		messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
+		sendMessage(openSocketHandle, messageBuffer);	//Send the blocks across the network
+		currentblockCount++;
+	} while (currentblockCount < numberOfBlocks);
+
+	#if defined _WIN32
+	stopwatch.endTime = GetTickCount();					//Stop the Windows timer
+
+	#elif defined __linux__
+	endTime = stopWatch();								//Stop the UNIX timer
+
+	#endif
+	stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
+
+
+	//Stage 7: Receive the missing blocks results from the server
+	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+	recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	int proportionMissing = convertCharToInt(messageBuffer);
+
+
+	//Stage 8: Receive the disorganized results from server
+	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+	recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	int disordered = convertCharToInt(messageBuffer);
+
+
+	//Stage 9: Analyze the results, and print them to the screen 
+	int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
+	printResults(blockSize, numberOfBlocks, (int)stopwatch.elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
+	free(messageBuffer);
 
 
 	//Close the sockets
@@ -108,7 +108,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	#elif defined __linux__
 		close(openSocketHandle);
 	#endif
-	return clientReturn;
+	return SUCCESS;
 }
 
 /*
@@ -233,18 +233,18 @@ void setMessageProperties(char messageProperties[], int bufferSize, int numberOf
 void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOffset)
 {
 	int index = 0;
-	int elementValue = ASCII_VALUE_0;											//ASCII 48 is '0'
-	for (index = messageIndexOffset; index < bufferSize; index++)	//Message buffer size can range from 1,000 - 10,000 bytes
+	int elementValue = ASCII_VALUE_0;									//ASCII 48 is '0'
+	for (index = messageIndexOffset; index < bufferSize; index++)		//Message buffer size can range from 1,000 - 10,000 bytes
 	{
-		if (elementValue < ASCII_VALUE_9)										//ASCII 58 is the char after '9'
+		if (elementValue < ASCII_VALUE_9)								//ASCII 58 is the char after '9'
 		{
-			messageBuffer[index] = (char)elementValue;				//Fill the message buffer with the elements value from 0 - 9
+			messageBuffer[index] = (char)elementValue;					//Fill the message buffer with the elements value from 0 - 9
 			elementValue++;
 		}
 
 		if (elementValue == ASCII_VALUE_9)
 		{
-			elementValue = ASCII_VALUE_0;										//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
+			elementValue = ASCII_VALUE_0;								//Reset the value once it passes decimal 58 (ie. ascii '9' = (char)58)
 		}
 	}
 
@@ -346,7 +346,7 @@ void printResults(int size, int sent, int time, int speed, int missing, int diso
 *					in the format of XXXX. It must be 4 characters long in order to work with our protocol.
 *  PARAMETERS    : parameters are as follows,
 *	int decimal	  : The decimal number to convert
-*	char* hexaNum : The Hexa char array that will contain the 4 character long hex number
+*	char* hexaNum : The Hex char array that will contain the 4 character long hex number
 *  RETURNS       : void
 */
 void convertDecToHex(int decimal, char* hexaNum)
@@ -360,8 +360,7 @@ void convertDecToHex(int decimal, char* hexaNum)
 
 
 	// The conversion of turning our decimal number into a hex number
-	decimalNum = (long)decimal;
-	quotient = decimalNum;
+	quotient = (long)decimal;
 	while (quotient != 0)
 	{
 		remainder = quotient % 16;
@@ -393,7 +392,7 @@ void convertDecToHex(int decimal, char* hexaNum)
 		{
 			strcat(buffer, "0");
 		}
-		strcat(buffer, hexaNumBackwards);
+		strcat(buffer, hexaNum);
 		strcpy(hexaNum, buffer);
 	}
 }
