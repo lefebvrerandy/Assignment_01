@@ -8,8 +8,12 @@
 *				   messages from the clients
 */
 
-
+#if defined _WIN32
 #include "server.h"
+#elif defined __linux__
+#include "../inc/server.h"
+#endif
+
 
 
 /*
@@ -52,7 +56,7 @@ int start_server()
 
 	for (int i = 0; i < 2; i++)
 	{
-		if (pthread_join(thread_linux_server[i], (void **)ptr_status) != 0)
+		if (pthread_join(thread_linux_server[i], NULL) != 0)
 		{
 			printf("Cannot join Threads.");
 		}

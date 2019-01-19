@@ -8,8 +8,12 @@
 *				   to and from the server
 */
 
-
+#if defined _WIN32
 #include "client.h"
+#elif defined __linux__
+#include "../inc/client.h"
+#endif
+
 
 
 /*
@@ -58,12 +62,12 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 5: Start the message loop
-	#if defined _WIN32
 	Timer stopwatch;
+	#if defined _WIN32
 	stopwatch.startTime = GetTickCount();				//Start the Windows timer
 
 	#elif defined __linux__
-	startTime = stopWatch();							//Start the UNIX timer
+	stopwatch.startTime = stopWatch();							//Start the UNIX timer
 
 	#endif
 	int currentblockCount = 0;
@@ -78,7 +82,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 	stopwatch.endTime = GetTickCount();					//Stop the Windows timer
 
 	#elif defined __linux__
-	endTime = stopWatch();								//Stop the UNIX timer
+	stopwatch.endTime = stopWatch();								//Stop the UNIX timer
 
 	#endif
 	stopwatch.elapsedTime = stopwatch.endTime - stopwatch.startTime;
