@@ -11,10 +11,15 @@
 *  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
-
+#if defined _WIN32
 #include "shared.h"
-#include "server.h"		//Needed for start_Server() prototype
+#include "shared.h"		//Needed for start_Server() prototype
 #include "client.h"		//Needed for clientProtocol() prototype
+#elif defined __linux__
+#include "../inc/shared.h"
+#include "../inc/shared.h"
+#include "../inc/client.h"	
+#endif
 
 
 int main(int argc, char* argv[])
