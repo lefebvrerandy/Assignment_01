@@ -13,11 +13,11 @@
 
 #if defined _WIN32
 #include "shared.h"
-#include "shared.h"		//Needed for start_Server() prototype
+#include "server.h"		//Needed for start_Server() prototype
 #include "client.h"		//Needed for clientProtocol() prototype
 #elif defined __linux__
 #include "../inc/shared.h"
-#include "../inc/shared.h"
+#include "../inc/server.h"
 #include "../inc/client.h"	
 #endif
 
