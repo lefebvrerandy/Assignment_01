@@ -4,7 +4,7 @@
 *  PROGRAMMER    : Randy Lefebvre & Bence Karner
 *  FIRST VERSION : 2019-01-08
 *  DESCRIPTION   : This file contains all the functions required to operate the sever component of the application.
-*				   Functions are included for adding multi thread support, opening TCP & UDP sockets, and sending/recieving 
+*				   Functions are included for adding multi thread support, opening TCP & UDP sockets, and sending/receiving 
 *				   messages from the clients
 */
 
@@ -77,7 +77,7 @@ int start_server_protocol(int* tcpOrUdp)
 {
 	
 	struct timeval timeout = {				//Tracks socket timeout
-		.tv_sec = 12,						//12 second timeout
+		.tv_sec = 5,						//5 second timeout
 		.tv_usec = 0
 	};
 
@@ -175,7 +175,7 @@ int start_server_protocol(int* tcpOrUdp)
 			{
 
 				//Make one final recv() call to ensure the socket is indeed empty
-				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);	
+				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), MSG_WAITALL);
 				if (!(recvStatus > 0))
 				{
 					break;
@@ -183,16 +183,16 @@ int start_server_protocol(int* tcpOrUdp)
 			}
 			else
 			{
-				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
+				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), MSG_WAITALL);
 			}
 			freeIndex++;
 		}
 
 		//Examine the data, and report the results to the client
-		messageData.blocksReceivedCount = getBlockCount(messageData.blocksReceivedList);
-		messageData.disorganizedBlocksCount = checkForDisorganizedBlocks(messageData.blocksReceivedList);
-		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);
-		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList);
+		messageData.blocksReceivedCount = getBlockCount(messageData.blocksReceivedList);													//Get the number of blocks that were received
+		messageData.disorganizedBlocksCount = checkForDisorganizedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);	//Get the number of blocks that were disorganized
+		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);								//Sort the block ID's from lowest to highest
+		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);				//Get the number of blocks that were missing
 
 
 		sendResults(acceptedSocketConnection, messageData.missingBlockCount, messageData.disorganizedBlocksCount);
@@ -212,15 +212,32 @@ int start_server_protocol(int* tcpOrUdp)
 	return SUCCESS;
 }
 
-//DEBUG
-//Comparison function taken from
-//https://www.tutorialspoint.com/c_standard_library/c_function_qsort.htm
+
+/*
+*  FUNCTION      : cmpfunc
+*  DESCRIPTION   : This method is used to compare two int values when called as the comparison function from qsort
+*  PARAMETERS    : Function parameters are as follows,
+*	const void * a : The first integer
+*	const void * b : The second integer
+*  RETURNS       : int : Returns an integer of the two values subtracted from one another
+*
+*	NOTE: This function was taken entirely from an online tutorial hosted by TurotialsPoint. For more information, please see the reference below
+*	Tutorials Point. (ND). C library function - qsort(). Retrieved on January 20, 2018, from
+		https://www.tutorialspoint.com/c_standard_library/c_function_qsort.htm
+*/
 int cmpfunc(const void * a, const void * b) 
 {
 	return (*(int*)a - *(int*)b);
 }
 
-//DEBUG 
+
+/*
+*  FUNCTION      : getBlockCount
+*  DESCRIPTION   : This method is used to get a count of the number of blocks that were received during transmission
+*  PARAMETERS    : Function parameters are as follows,
+*	int blockIDList[]	: Int array containing the blocks ID's received during the connections lifetime
+*  RETURNS       : int : Returns an integer of how many block ID's were received
+*/
 int getBlockCount(int blockIDList[])
 {
 	int numberOfChars = 0;
@@ -235,8 +252,16 @@ int getBlockCount(int blockIDList[])
 }
 
 
-//DEBUG
-int checkForDisorganizedBlocks(int blockIDList[])
+/*
+*  FUNCTION      : checkForDisorganizedBlocks
+*  DESCRIPTION   : This method is used to compare the ID's of two blocks, and check if they sequentially increase, or if an ID
+*					is incorrect according to the numbering scheme
+*  PARAMETERS    : Function parameters are as follows,
+*	int blockIDList[]		: Int array containing the blocks ID's received during the connections lifetime
+*	int blocksReceivedCount : The count of how many blocks were received (used to limit the loop count when checking the ID's)
+*  RETURNS       : int : Returns an integer of how many block ID's were disorganized
+*/
+int checkForDisorganizedBlocks(int blockIDList[], int blocksReceivedCount)
 {
 
 	/////////////////////////////////////////////////////////////////////////////////////////
@@ -268,12 +293,10 @@ int checkForDisorganizedBlocks(int blockIDList[])
 	int numDisorganizedBlocks = 0;
 	int elemOne = 0;
 	int elemTwo = 0;
-	int difference = 0;
-
 
 	//Only enter the array if there is at least two elements
 	//Default disorganizedCount to 0 when only 1 block received
-	for(index = 0; index < (MESSAGE_BUFFER_SIZE_10000 - 1); index++)
+	for(index = 0; index < (blocksReceivedCount - 1); index++)
 	{
 		if (blockIDList[index] != 0)
 		{
@@ -281,7 +304,7 @@ int checkForDisorganizedBlocks(int blockIDList[])
 		}
 		if (blockIDList[++index] != 0)
 		{
-			elemTwo = blockIDList[++index];
+			elemTwo = blockIDList[index];
 		}
 		if ((elemOne != 0) && (elemTwo != 0))
 		{
@@ -526,14 +549,14 @@ int getDifference(const int elemOne, const int elemTwo)
 *				   the ID's increment by 1, or if some numbers are missing
 *  PARAMETERS    : Function parameters are as follows,
 *	int receivedBlockList[] : Array containing the ID's of all the blocks that have been received
-*  RETURNS       : void : The function has no return
+*  RETURNS       : int : Retruns an int that represents the number of blocks missed during transmission
 */
-int checkForMissedBlocks(int receivedBlockList[])
+int checkForMissedBlocks(int receivedBlockList[], int blocksReceivedCount)
 {
 	int missingBlocks = 0;
 	int elemOne = 0;
 	int elemTwo = 0;
-	for (unsigned int index = 0; index < (MESSAGE_BUFFER_SIZE_10000 - 1); index++)
+	for (unsigned int index = 0; index < (blocksReceivedCount - 1); index++)
 	{
 		elemOne = receivedBlockList[index];
 		elemTwo = receivedBlockList[++index];
@@ -546,34 +569,8 @@ int checkForMissedBlocks(int receivedBlockList[])
 
 
 /*
-*  FUNCTION      : getBytesMissing
-*  DESCRIPTION   : This function is used to get the number of bytes missing from the message.
-*				   The function compares the total message bytes count against the expected block size
-*  PARAMETERS    : Function parameters are as follows,
-*	int blockSize		: Block size indicator (1000 to 10,000)
-*	char* messageBuffer : Original message passed from the client
-*  RETURNS       : int : Returns an integer indicating the number of bytes lost during transmission
-*/
-int getBytesMissing(int blockSize, char* messageBuffer)
-{
-	int lostBytes = 0;
-
-
-	//Compare bytes received to what was expected
-	int bytesReceived = strlen(messageBuffer);
-	if (bytesReceived != blockSize)
-	{
-		lostBytes += blockSize - bytesReceived;
-	}
-
-	return lostBytes;
-
-} 
-
-
-/*
 *  FUNCTION      : packageResults
-*  DESCRIPTION   : This method is used to DEBUG
+*  DESCRIPTION   : This method is used to print an integer into a suitable array
 *  PARAMETERS    : Function parameters are as follows,
 *	char messagBuffer[] : Outbounnd message container
 *	int packagedValue   : Int value to be added to the message
