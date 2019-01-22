@@ -64,6 +64,8 @@ typedef int SOCKET;
 //Network properties
 #define HOST_BUFFER_SIZE		255
 #define PORT_LENGTH				10
+#define NETWORK_TYPE_TCP		1
+#define NETWORK_TYPE_UDP		2
 
 
 //Network error states
@@ -116,7 +118,7 @@ char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 
 //Prototypes
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
-void sendMessage(SOCKET connectedSocket, char messageBuffer[]);
+void sendMessage(SOCKET connectedSocket, char messageBuffer[], int typeOfConnection, const struct sockaddr_in socketAddress);
 int setErrorState(int errorState);
 int convertCharToInt(char* stringToConvert);
 int proc_arguments(int argumentCount, char* args[]);
