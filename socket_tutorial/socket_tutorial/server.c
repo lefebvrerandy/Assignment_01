@@ -198,12 +198,14 @@ int start_server_protocol(int* tcpOrUdp)
 		protocol.blockSize = getBlockSize(messageBuffer);
 		protocol.blockCount = getNumberOfBlocks(messageBuffer);
 		int freeIndex = 0;
+		char* resizedBuffer = malloc(sizeof(char) * protocol.blockSize);
 		while (true)
 		{
 
 			//Get the blocks ID and save it to the list
 			saveBlockID(messageData.blocksReceivedList, getBlockID(messageBuffer), freeIndex);
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
+			memset((void*)resizedBuffer, 0, ((sizeof(char)) * protocol.blockSize));
 
 			//Clear the buffer and receive the next message if another one is still expected
 			if (tcpOrUdp[1] == IPPROTO_TCP)
@@ -213,7 +215,7 @@ int start_server_protocol(int* tcpOrUdp)
 				{
 
 					//Make one final recv() call to ensure the socket is indeed empty
-					recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), MSG_WAITALL);
+					recvStatus = recv(acceptedSocketConnection, resizedBuffer, ((sizeof(char)) * protocol.blockSize), MSG_WAITALL);
 					if (!(recvStatus > 0))
 					{
 						break;
@@ -221,7 +223,7 @@ int start_server_protocol(int* tcpOrUdp)
 				}
 				else
 				{
-					recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), MSG_WAITALL);
+					recvStatus = recv(acceptedSocketConnection, resizedBuffer, ((sizeof(char)) * protocol.blockSize), MSG_WAITALL);
 				}
 			}
 			else
@@ -232,7 +234,7 @@ int start_server_protocol(int* tcpOrUdp)
 				{
 
 					//Make one final recv() call to ensure the socket is indeed empty
-					recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
+					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (const struct sockaddr *)&sender_addr, &len);
 					if (!(recvStatus > 0))
 					{
 						break;
@@ -240,9 +242,10 @@ int start_server_protocol(int* tcpOrUdp)
 				}
 				else
 				{
-					recvStatus = recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
+					recvStatus = recvfrom(openSocketHandle, resizedBuffer, ((sizeof(char)) * protocol.blockSize), 0, (const struct sockaddr *)&sender_addr, &len);
 				}
 			}
+			strcpy(messageBuffer, resizedBuffer);
 			freeIndex++;
 		}
 

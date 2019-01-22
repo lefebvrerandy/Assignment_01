@@ -41,12 +41,11 @@
 
 //Redefine some types and constants based on OS
 #if defined _WIN32
-	//DEBUG need to fill in
 #elif defined __linux__
 typedef int SOCKET;
-	#define INVALID_SOCKET -1			// WinSock invalid socket DEBUG never used
-	#define SOCKET_ERROR   -1			// basic WinSock error	  DEBUG never used
-	#define closesocket(s) close(s);	// Unix uses file descriptors, WinSock doesn't... DEBUG change comment
+	#define INVALID_SOCKET -1			// WinSock invalid socket
+	#define SOCKET_ERROR   -1			// basic WinSock error
+	#define closesocket(s) close(s);	// Unix uses file descriptors, WinSock doesn't...
 #endif
 
 
