@@ -44,15 +44,16 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 		return  SOCKET_CREATION_ERROR; 
 	}
 
-
-	//Stage 3: Connect to the server
-	int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
-	if (!(boundSocketHandle > SOCKET_ERROR))
+	if (strcmp(storedData[0], "-TCP") == 0)
 	{
-		printError(SOCKET_CONNECTION_ERROR);
-		return SOCKET_CONNECTION_ERROR;
+		//Stage 3: Connect to the server
+		int boundSocketHandle = connectToServer(openSocketHandle, socketAddress);
+		if (!(boundSocketHandle > SOCKET_ERROR))
+		{
+			printError(SOCKET_CONNECTION_ERROR);
+			return SOCKET_CONNECTION_ERROR;
+		}
 	}
-
 
 	//Stage 4: Convert the CLA's and allocate space for the message buffer
 	int numberOfBlocks = convertCharToInt(storedData[CLA_NUMBER_OF_BLOCKS]);
@@ -71,10 +72,20 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 	#endif
 	int currentblockCount = 0;
+	int len = sizeof(socketAddress);
 	do		
 	{
 		messageBuffer = CreateMessageBuffer(blockSize, numberOfBlocks, currentblockCount + 1);
-		sendMessage(openSocketHandle, messageBuffer);	//Send the blocks across the network
+		if (strcmp(storedData[0], "-TCP") == 0 )
+		{
+			sendMessage(openSocketHandle, messageBuffer, NETWORK_TYPE_TCP, socketAddress);	//Send the blocks across the network
+		}
+		else
+		{
+			sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&socketAddress, len);
+			//sendMessage(openSocketHandle, messageBuffer, NETWORK_TYPE_UDP, recipient_addr);	//Send the blocks across the network
+		}
+
 		currentblockCount++;
 	} while (currentblockCount < numberOfBlocks);
 
@@ -89,14 +100,31 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 7: Receive the missing blocks results from the server
+	struct sockaddr_in sender_addr;
+	len = sizeof(sender_addr);
 	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	if (strcmp(storedData[0], "-TCP") == 0)
+	{
+		recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	}
+	else
+	{
+		recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
+
+	}
 	int proportionMissing = convertCharToInt(messageBuffer);
 
 
 	//Stage 8: Receive the disorganized results from server
 	memset((void*)messageBuffer, 0, sizeof(messageBuffer));
-	recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	if (strcmp(storedData[0], "-TCP") == 0)
+	{
+		recv(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0);
+	}
+	else
+	{
+		recvfrom(openSocketHandle, messageBuffer, sizeof(messageBuffer), 0, (const struct sockaddr *)&sender_addr, &len);
+	}
 	int disordered = convertCharToInt(messageBuffer);
 
 

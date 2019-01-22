@@ -64,6 +64,8 @@ typedef int SOCKET;
 //Network properties
 #define HOST_BUFFER_SIZE		255
 #define PORT_LENGTH				10
+#define NETWORK_TYPE_TCP		1
+#define NETWORK_TYPE_UDP		2
 
 
 //Network error states
