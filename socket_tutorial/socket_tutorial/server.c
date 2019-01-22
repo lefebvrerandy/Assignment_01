@@ -99,7 +99,7 @@ int start_server_protocol(int* tcpOrUdp)
 		.blockCount = 0
 	};
 
-
+	int TCPorUDP = tcpOrUdp[1];
 
 	//Stage 1: Create local socket
 	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
@@ -122,7 +122,7 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 	// Only trigger listen if we are using TCP port
-	if (tcpOrUdp[1] == IPPROTO_TCP)
+	if (TCPorUDP == IPPROTO_TCP)
 	{
 		//Stage 3: Listen for an incoming connection to the open socket
 		boundSocketHandle = listen(openSocketHandle, SOMAXCONN);
@@ -140,7 +140,7 @@ int start_server_protocol(int* tcpOrUdp)
 		struct sockaddr_in remoteAddress;
 		socklen_t addressSize = sizeof(remoteAddress);
 		SOCKET acceptedSocketConnection;
-		if (tcpOrUdp[1] == IPPROTO_TCP)
+		if (TCPorUDP == IPPROTO_TCP)
 		{
 			acceptedSocketConnection = accept(openSocketHandle, (struct sockaddr*)&remoteAddress, &addressSize);
 			if (!(acceptedSocketConnection > ERROR_RETURN))
@@ -152,7 +152,7 @@ int start_server_protocol(int* tcpOrUdp)
 
 		// Only set the timer if we are using TCP port
 		fd_set readFDs;
-		if (tcpOrUdp[1] == IPPROTO_TCP)
+		if (TCPorUDP == IPPROTO_TCP)
 		{
 			//Stage 5A: Set the socket options (setsockopt) to have a timeout(seconds) set by struct timeval timeout
 			//NOTE: SO_RCVTIMEO is for setting the socket receive timeout; SOL_SOCKET is for setting options at the socket level
@@ -184,7 +184,7 @@ int start_server_protocol(int* tcpOrUdp)
 		int recvStatus = 0;
 		while (recvStatus <= 0)
 		{
-			if (tcpOrUdp[1] == IPPROTO_TCP)
+			if (TCPorUDP == IPPROTO_TCP)
 			{
 				recvStatus = recv(acceptedSocketConnection, messageBuffer, sizeof(messageBuffer), 0);
 			}
@@ -207,7 +207,7 @@ int start_server_protocol(int* tcpOrUdp)
 			memset((void*)messageBuffer, 0, sizeof(messageBuffer));
 
 			//Clear the buffer and receive the next message if another one is still expected
-			if (tcpOrUdp[1] == IPPROTO_TCP)
+			if (TCPorUDP == IPPROTO_TCP)
 			{
 				int selectResult = select(0, &readFDs, NULL, NULL, &timeout);
 				if (!(selectResult > 0))
@@ -253,7 +253,7 @@ int start_server_protocol(int* tcpOrUdp)
 		qsort(messageData.blocksReceivedList, (size_t)messageData.blocksReceivedCount, sizeof(int), cmpfunc);								//Sort the block ID's from lowest to highest
 		messageData.missingBlockCount = checkForMissedBlocks(messageData.blocksReceivedList, messageData.blocksReceivedCount);				//Get the number of blocks that were missing
 
-		if (tcpOrUdp[1] == IPPROTO_TCP)
+		if (TCPorUDP == IPPROTO_TCP)
 		{
 			sendResults(acceptedSocketConnection, messageData.missingBlockCount, messageData.disorganizedBlocksCount);
 		}
@@ -266,12 +266,12 @@ int start_server_protocol(int* tcpOrUdp)
 			sendto(openSocketHandle, messageBuffer, strlen(messageBuffer), 0, (const struct sockaddr*)&sender_addr, len);
 		}
 		#if defined _WIN32
-		if (tcpOrUdp[1] == IPPROTO_TCP)
+		if (TCPorUDP == IPPROTO_TCP)
 		{
 			closesocket(acceptedSocketConnection);
 		}
 		#elif defined __linux__
-		if (tcpOrUdp[1] == IPPROTO_TCP)
+		if (TCPorUDP == IPPROTO_TCP)
 		{
 			close(acceptedSocketConnection);
 		}
