@@ -324,15 +324,31 @@ int checkForDisorganizedBlocks(int blockIDList[], int blocksReceivedCount)
 }
 
 
-//DEBUG
-//https://stackoverflow.com/questions/9721042/count-number-of-digits-which-method-is-most-efficient
+/*
+*  FUNCTION      : countDigits
+*  DESCRIPTION   : This method is used to get a count of the number of digits in number passed in as an argument
+*  PARAMETERS    : const int arg : An integer that will be counted to determine how many digits it contains
+*  RETURNS       : int : Returns an integer of how many digits are in the number
+* 
+*	NOTE: This function was taken entirely from an online post on stackoverflow.com. For more information, please see the reference.
+*		   AShelly. (2012). Count number of digits - which method is most efficient?. Retrieved on January 15, 2018, from
+				https://stackoverflow.com/questions/9721042/count-number-of-digits-which-method-is-most-efficient
+*/
 int countDigits(const int arg)
 {
 	return snprintf(NULL, 0, "%d", arg) - (arg < 0);
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
+*  DESCRIPTION   : This method is used to copy the block's ID into the int array for use later when the server examines the results of the transmission
+*  PARAMETERS    : Parameters are as follows,
+*	int blockIDList[]	: Array containing a list of all block ID's received during the transmission
+*	const int blockID	: The blocks ID that will be added to the array
+*	const int freeIndex : The position in the array to write the ID at
+*  RETURNS       : void : Function has no return
+*/
 void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
 {
 	int digitLength = countDigits(blockID);
@@ -340,7 +356,15 @@ void saveBlockID(int blockIDList[], const int blockID, const int freeIndex)
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : sendResults
+*  DESCRIPTION   : This method is used to package the results of the transmission, and send them to the client
+*  PARAMETERS    : Parameters are as follows,
+*	SOCKET acceptedSocketConnection  : Socket used to connect to the client
+*	const int missingBlockCount		 : count of the number of blocks missing
+*	const int disorganizedBlockCount : Count of the number of blocks that were received in the incorrect order
+*  RETURNS       : void : Has no return
+*/
 void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, const int disorganizedBlockCount)
 {
 	char messageBuffer[MESSAGE_BUFFER_SIZE_10000] = {'\0'};
@@ -351,7 +375,12 @@ void sendResults(SOCKET acceptedSocketConnection, const int missingBlockCount, c
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : intitializeSocket
+*  DESCRIPTION   : This method is used to initialize a struct used for setting up the servers socket settings
+*  PARAMETERS    : void : Takes no arguments
+*  RETURNS       : struct sockaddr_in  : Returns a fully initialized struct of type sockaddr_in 
+*/
 struct sockaddr_in intitializeSocket(void)
 {
 	struct sockaddr_in socketDetials; 
@@ -363,7 +392,12 @@ struct sockaddr_in intitializeSocket(void)
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : printServerProperties
+*  DESCRIPTION   : This method is used to print the servers properties to the screen
+*  PARAMETERS    : void : Takes no arguments
+*  RETURNS       : void : Has no return
+*/
 void printServerProperties(void)
 {
 	char hostbuffer[HOST_BUFFER_SIZE];
@@ -443,7 +477,7 @@ void printError(int errorCode)
 *					and convert it to a single decimal value
 *  PARAMETERS    : Function parameters are as follows
 *	char messageBuffer[] : Message sent from the client
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*  RETURNS       : long : Returns an long indicating the block size 
 */
 long getBlockSize(char messageBuffer[])
 {
@@ -462,7 +496,6 @@ long getBlockSize(char messageBuffer[])
 	long blockSize = convertHexToDecimal(messageProperties);
 	free(messageProperties);
 	return blockSize;
-
 }
 
 
@@ -471,14 +504,13 @@ long getBlockSize(char messageBuffer[])
 *  DESCRIPTION   : This method is used to convert a hexadecimal string of characters into a single integer of equivalent value
 *  PARAMETERS    : Function parameters are as follows
 *	char messageProperties : Pointer to the string containing the message properties
-*  RETURNS       : int : Returns an integer indicating the functions success (ie. return > 0) or failure (ie. return < 0)
+*  RETURNS       : int : Returns an int cast as a long, representing the decimal value of the hex string
 */
 int convertHexToDecimal(char* messageProperties)
 {
 	int convertedHex = 0;
 	sscanf(messageProperties, "%x", &convertedHex);
 	return (long)convertedHex;
-
 }
 
 
@@ -539,7 +571,14 @@ int getBlockID(char messageBuffer[])
 }
 
 
-//DEBUG
+/*
+*  FUNCTION      : getDifference
+*  DESCRIPTION   : This method is used to get the difference between two integers passed in as arguments
+*  PARAMETERS    : Function parameters are as follows
+*	const int elemOne : Int used to get the difference
+*	const int elemTwo : Int used in the subtraction
+*  RETURNS       : int : Returns an integer of the absolute difference between the two ints
+*/
 int getDifference(const int elemOne, const int elemTwo)
 {
 	return abs(elemOne - elemTwo);

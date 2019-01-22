@@ -127,8 +127,7 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 {
 	int newBoundSocket = connect(openSocketHandle, (struct sockaddr*)&socketAddress, sizeof(struct sockaddr));
 	return newBoundSocket;
-
-}//Done
+}
 
 
 /*
@@ -136,8 +135,10 @@ int connectToServer(SOCKET openSocketHandle, struct sockaddr_in socketAddress)
 *  DESCRIPTION   : This function is used to reserve a chunk of space in memory with the size 
 *				   defined at run time by the CLA's
 *  PARAMETERS    : Parameters are as follows,
-*	int bufferSize : Size of memory to reserve for the message buffer
-*  RETURNS       : void : The function has no return value
+*	int bufferSize		: Size of memory to reserve for the message buffer
+*	int numberOfBlocks	: Number of blocks that will be converted to hex
+*	int currentMsgNum	: Current message ID that will be converted to hex
+*  RETURNS       : char* : The function has no return value
 */
 char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 {
@@ -145,18 +146,20 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 	char* returnArray = malloc(sizeof(char) * (bufferSize + 1));
 	char messageProperties[MESSAGE_PROPERTY_SIZE] = { "" };
 
+
 	//Set the message buffer's properties
 	setMessageProperties(messageProperties, bufferSize, numberOfBlocks, currentMsgNum);
 	strcpy(returnArray, messageProperties);
 	
+
 	//Find the amount of space occupied by the message properties, and offset the index
 	int propertyLength = strlen(returnArray);	
+
 
 	//Fill each block with chars 0 - 9
 	fillMessageBuffer(returnArray, bufferSize, propertyLength);					
 	return returnArray;
-
-}//Done
+}
 
 
 /*
@@ -167,6 +170,7 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 *	int messageProperties[] : Array that will hold the message properties (ie. block size and count)
 *	int bufferSize			: The block size supplied by the CLA
 *	int numberOfBlocks		: The number of blocks supplied by the CLA
+*	int currentMsgNum		: The current message number used for filling in the block ID
 *  RETURNS       : void : The function has no return value
 */
 void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks, int currentMsgNum)
@@ -213,16 +217,18 @@ void setMessageProperties(char messageProperties[], int bufferSize, int numberOf
 	convertDecToHex(numberOfBlocks, numBlocks);
 	strcat(messageProperties, numBlocks);
 
+
 	// Convert which message number we are sending
 	// Convert the decimal number of which iteration is being sent to hex and store it
 	char msgNumHex[5] = {""};
 	convertDecToHex(currentMsgNum, msgNumHex);
 	strcat(messageProperties, msgNumHex);
 
+
 	// Append the ending "G" at the end of the format
 	strcat(messageProperties, "G");
+}
 
-}//Done
 
 /*
 *  FUNCTION      : fillMessageBuffer
@@ -256,7 +262,7 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOff
 	//Terminate the string with the carriage return
 	messageBuffer[index] = '\0';
 
-}//Done
+}
 
 
 #if defined __linux__
@@ -268,8 +274,8 @@ void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOff
 *
 *	NOTE: This function  was initially found online. Since then, the function has been partial modified to suit the projects needs.
 *		   As a result, credit belongs to the original author on the website. For more information, please see the reference,
-*		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019,
-*			from https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
+*		   Lee. (2018). How to measure time in milliseconds using ANSI C?. Retrieved on January 8, 2019, from 
+				https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c/36095407#36095407
 */
 double stopWatch(void)
 {
@@ -288,7 +294,7 @@ double stopWatch(void)
 	}
 	return ERROR_RETURN;
 
-}//Done
+}
 
 
 /*
@@ -302,7 +308,7 @@ double calculateElapsedTime(long startTime, long endTime)
 {
 	return (endTime - startTime);
 
-}//Done
+}
 #endif
 
 
@@ -316,14 +322,15 @@ double calculateElapsedTime(long startTime, long endTime)
 */
 int calculateSpeed(int bytes, int elapsedTimeMS)
 {
-	int speed = 0;
+
+	int megabytes = bytes / MEGABYTES;			//Constant set to 10242 bytes per megabyte
+	int seconds = elapsedTimeMS / MILLISECONDS;	//Constants set to 1000 milliseconds per second
+
 
 	//Speed is calculated as (megabytes / sec) * 8 (ie. megabits)
-	speed = ((bytes * 1024) / elapsedTimeMS) * 8;
-
+	int speed = ((megabytes) / elapsedTimeMS) * 8;
 	return speed;
-
-}//DOne
+}
 
 
 /*
@@ -351,7 +358,7 @@ void printResults(int size, int sent, int time, int speed, int missing, int diso
 *  PARAMETERS    : parameters are as follows,
 *	int decimal	  : The decimal number to convert
 *	char* hexaNum : The Hex char array that will contain the 4 character long hex number
-*  RETURNS       : void
+*  RETURNS       : void : The function has no return value
 */
 void convertDecToHex(int decimal, char* hexaNum)
 {
@@ -363,7 +370,7 @@ void convertDecToHex(int decimal, char* hexaNum)
 	char hexaNumBackwards[MAX_FORMAT_SIZE + 1] = { "" };
 
 
-	// The conversion of turning our decimal number into a hex number
+	//The conversion of turning our decimal number into a hex number
 	quotient = (long)decimal;
 	while (quotient != 0)
 	{
@@ -375,6 +382,7 @@ void convertDecToHex(int decimal, char* hexaNum)
 		quotient = quotient / 16;
 	}
 
+	//Reverse the order of the hex characters calculated above
 	int l = 0;
 	for (i = j; i > 0; i--)
 	{

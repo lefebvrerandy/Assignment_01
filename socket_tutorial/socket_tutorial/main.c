@@ -7,8 +7,6 @@
 *				   examining the command line arguments, and directing the flow of the application. The program is used to measure the speed of message
 *				   transmission across TCP, and UDP sockets between the server and its clients. The program offers a hyper threaded ANSI C solution for 
 *				   the creating networked processes between windows and UNIX systems.
-*
-*  NOTE: DEBUG ADD THE REFERENCE TO NORBERTS PREVIOUS WORK, AND THE ONLINE POST HE GOT IT FROM
 */
 
 #if defined _WIN32
@@ -254,7 +252,7 @@ int validateBlockSize(char* blockSizeString)
 
 /*
 *  FUNCTION      : validateNumOfBlocks
-*  DESCRIPTION   : This function is used to ensure the block count doesn't exceed a total data size of 1 Gb
+*  DESCRIPTION   : This function is used to ensure the block count doesn't exceed a total size of 10,000
 *  PARAMETERS    : char* blockCount : String representing the number of blocks to send over the network
 *  RETURNS       : int : Denotes if the operation completed successfully (ie. return > -1)
 */

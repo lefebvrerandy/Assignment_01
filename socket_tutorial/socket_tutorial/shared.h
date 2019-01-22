@@ -103,6 +103,11 @@ typedef int SOCKET;
 #define CMDLINE_MAX_PARAMETERS_SERVER	3
 
 
+//Datatype conversions
+#define MILLISECONDS	1000
+#define MEGABYTES		(1024*1024)
+
+
 //Global struct for all client connection info
 char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 /* storedData Breakdown: 
@@ -117,7 +122,6 @@ char storedData[SWITCH_OPTIONS][MAX_ARGUMENT_LENGTH];
 //Prototypes
 SOCKET createSocket(int protocolDomain, int socketType, int protocolType);
 void sendMessage(SOCKET connectedSocket, char messageBuffer[]);
-int setErrorState(int errorState);
 int convertCharToInt(char* stringToConvert);
 int proc_arguments(int argumentCount, char* args[]);
 int validateAddress(char address[]);
