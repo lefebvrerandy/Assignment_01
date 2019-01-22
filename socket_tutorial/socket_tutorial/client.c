@@ -375,7 +375,7 @@ long unsigned int calculateSpeed(int bytes, int elapsedTimeMS)
 */
 void printResults(int size, int sent, int time, long unsigned int speed, int missing, int disordered)
 {
-	printf("Size: %d Sent: %d, Time: %dms, Speed: %luMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
+	printf("Size: %d Sent: %d, Time: %dms, Speed: %luMbps , Missing: %d, Disordered: %d\n", size, sent, time, speed, missing, disordered);
 }
 
 
