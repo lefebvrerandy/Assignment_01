@@ -139,11 +139,11 @@ int proc_arguments(int argumentCount, char* args[])
 
 	if (strcmp(storedData[CLA_SOCKET_TYPE], "-TCP") == 0)			//CLA_SOCKET_TYPE is set to 0, in accordance with storedData's declaration in shared.h
 	{
-		return 2;	//DEBUG NEED TO CHANGE FROM MAGIC NUMBER
+		return 2;
 	}
 	else if (strcmp(storedData[CLA_SOCKET_TYPE], "-UDP") == 0)
 	{
-		return 3;	//DEBUG NEED TO CHANGE FROM MAGIC NUMBER
+		return 3;
 	}
 	return 0;
 }
@@ -169,7 +169,7 @@ int validateAddress(char address[])
 		int index = 0;
 		for (index = 0; index < IPaddressLength; index++)
 		{
-			if ((index == 3) || (index == 7) || (index == 11) )								//DEBUG might need to rewrite the statement to check for each value individually
+			if ((index == 3) || (index == 7) || (index == 11) )
 			{
 				if (address[index] != '.')
 				{
