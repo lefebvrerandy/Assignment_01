@@ -34,6 +34,8 @@ int start_server()
 	thread_windows_server[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)tcpArray, 0, NULL);
 	thread_windows_server[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_server_protocol, (LPVOID)udpArray, 0, NULL);
 
+	printServerProperties();
+
 	WaitForMultipleObjects(2, thread_windows_server, TRUE, INFINITE);
 	Sleep(1000000);
 	for (int i = 0; i < 2; i++)
@@ -100,7 +102,6 @@ int start_server_protocol(int* tcpOrUdp)
 
 
 	//Stage 1: Create local socket
-	printServerProperties();
 	SOCKET openSocketHandle = createSocket(AF_INET, tcpOrUdp[0], tcpOrUdp[1]);
 	if (!(openSocketHandle > ERROR_RETURN))
 	{

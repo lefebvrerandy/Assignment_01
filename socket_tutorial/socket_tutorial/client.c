@@ -129,7 +129,7 @@ int start_client_protocol(int stream_or_datagram, int tcp_or_udp)
 
 
 	//Stage 9: Analyze the results, and print them to the screen 
-	int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
+	long unsigned int megaBitsPerSecond = calculateSpeed(totalBytes, (int)stopwatch.elapsedTime);
 	printResults(blockSize, numberOfBlocks, (int)stopwatch.elapsedTime, megaBitsPerSecond, proportionMissing, disordered);	//Size: <<size>> Sent: <<sent>> Time: <<time>> Speed: <<speed>> Missing: <<missing>> Disordered: <<disordered>> 
 	free(messageBuffer);
 
@@ -348,15 +348,15 @@ double calculateElapsedTime(long startTime, long endTime)
 *	int elapsedTimeMS : Total elapsed time (ms) needed to send all the bytes to the server
 *  RETURNS       : int : Returns the speed of transmission as megabits / second
 */
-int calculateSpeed(int bytes, int elapsedTimeMS)
+long unsigned int calculateSpeed(int bytes, int elapsedTimeMS)
 {
 
 	int megabytes = bytes / MEGABYTES;			//Constant set to 10242 bytes per megabyte
-	int seconds = elapsedTimeMS / MILLISECONDS;	//Constants set to 1000 milliseconds per second
+	double seconds = (double)elapsedTimeMS / (double)MILLISECONDS;	//Constants set to 1000 milliseconds per second
 
 
 	//Speed is calculated as (megabytes / sec) * 8 (ie. megabits)
-	int speed = ((megabytes) / elapsedTimeMS) * 8;
+	long unsigned int speed = ((megabytes) / seconds) * 8;
 	return speed;
 }
 
@@ -373,9 +373,9 @@ int calculateSpeed(int bytes, int elapsedTimeMS)
 *	int disordered : The count of messages that were disordered
 *  RETURNS       : void  : Function has no return value
 */
-void printResults(int size, int sent, int time, int speed, int missing, int disordered)
+void printResults(int size, int sent, int time, long unsigned int speed, int missing, int disordered)
 {
-	printf("Size: %d Sent: %d, Time: %dms, Speed: %dMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
+	printf("Size: %d Sent: %d, Time: %dms, Speed: %luMbps , Missing: %d, Disordered: %d", size, sent, time, speed, missing, disordered);
 }
 
 
