@@ -248,6 +248,7 @@ int start_server_protocol(int* tcpOrUdp)
 			strcpy(messageBuffer, resizedBuffer);
 			freeIndex++;
 		}
+		free(resizedBuffer);
 
 		//Examine the data, and report the results to the client
 		messageData.blocksReceivedCount = getBlockCount(messageData.blocksReceivedList);													//Get the number of blocks that were received
