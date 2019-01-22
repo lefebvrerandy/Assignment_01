@@ -29,6 +29,6 @@ char* CreateMessageBuffer(int bufferSize, int numberOfBlocks, int currentMsgNum)
 void setMessageProperties(char messageProperties[], int bufferSize, int numberOfBlocks, int currentMsgNum);
 void fillMessageBuffer(char messageBuffer[], int bufferSize, int messageIndexOffset);
 double stopWatch(void);
-int calculateSpeed(int bytes, int elapsedTimeMS);
+long unsigned int calculateSpeed(int bytes, int elapsedTimeMS);
 void printResults(int size, int sent, int time, long unsigned int speed, int missing, int disordered);
 void convertDecToHex(int decimal, char* hexaNum);
